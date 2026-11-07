@@ -8,6 +8,12 @@ A Firefox add-on that shows your chosen sites as big buttons in the sidebar. Cli
 
 It started as a launcher for a living-room PC, but nothing in it is TV-specific.
 
+<p>
+  <img src="docs/screenshot-sidebar.png" alt="The sidebar with nine streaming and self-hosted services as large buttons, Netflix highlighted" width="180">
+  &nbsp;
+  <img src="docs/screenshot-editor.png" alt="Adding Plex: name, address, and a choice of the icons found on the site, a letter tile or an upload" width="180">
+</p>
+
 ## Using it
 
 - **Add a site:** open it, then press **+ Add this site** at the bottom of the sidebar. Siderail suggests a name, a home address and the best icon it found; change any of them, then **Save**.
@@ -58,6 +64,20 @@ Firefox loads unsigned add-ons temporarily (`just dev`, or `about:debugging`), s
   - Firefox won't let WebDriver navigate a tab to an extension page, so the test opens it from Firefox's privileged context, which needs geckodriver's `--allow-system-access`.
   - A pref pins the add-on's internal UUID, so its page has a known address.
 
+## Design decisions
+
+These were settled while designing it. Revisit them only with a reason.
+
+- **The sidebar, not tabs.** Firefox's own vertical tabs were the obvious alternative. But every site stays loaded (and keeps playing audio in the background), and the icons are small. Siderail keeps one page and swaps what's in it.
+- **One column.** A wider sidebar makes bigger buttons, not more columns.
+- **Large icons or nothing.** Scaled-up 16px favicons were mocked up and rejected as too blurry. The fallback is a letter tile, never a favicon.
+- **No custom layouts.** Letting users supply their own HTML, or load a dashboard site into the sidebar with its links redirected into the main tab, was considered and dropped.
+- **Firefox only.** Chrome's side panel can't reopen by itself when the browser starts, which defeats a launcher that should always be there. Chrome also only installs extensions automatically through machine-wide policy.
+- **Signing through addons.mozilla.org.** Release Firefox only installs signed add-ons permanently. Building Firefox with signing turned off, or using Developer Edition, was rejected.
+- **Parked alternatives.** If signing or installation becomes the blocker:
+  - A Tampermonkey userscript avoids signing, but has to draw over every page, fights site layouts, and doesn't run on Firefox's own pages.
+  - Firefox AutoConfig (a privileged startup script) could add a real panel without an add-on, but suits a single managed machine only.
+
 ## Not done yet
 
 - Searching [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) for an icon, which matters most for self-hosted apps.
@@ -65,3 +85,7 @@ Firefox loads unsigned add-ons temporarily (`just dev`, or `about:debugging`), s
 - An admin-set list through Firefox's policy file (managed storage), for kiosk and family machines.
 - Drag to reorder.
 - Signing and publishing on addons.mozilla.org.
+
+## License
+
+[GPL-3.0-or-later](LICENSE).

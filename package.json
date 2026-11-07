@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Your sites as big buttons in the Firefox sidebar",
+  "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "test": "node --test test/unit/*.test.js"
