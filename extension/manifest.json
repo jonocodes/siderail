@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Siderail",
+  "version": "0.1.0",
+  "description": "Your sites as big buttons in the sidebar. Click one to open it in the current tab.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "siderail@jonocodes",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": { "required": ["none"] }
+    }
+  },
+  "permissions": ["storage", "tabs"],
+  "optional_host_permissions": ["<all_urls>"],
+  "icons": { "48": "icons/siderail.svg", "96": "icons/siderail.svg" },
+  "sidebar_action": {
+    "default_title": "Siderail",
+    "default_panel": "sidebar/sidebar.html",
+    "default_icon": "icons/siderail.svg"
+  }
+}

@@ -1,0 +1,67 @@
+# Siderail
+
+A Firefox add-on that shows your chosen sites as big buttons in the sidebar. Clicking a button loads that site in the current tab, so one window and one tab can move between sites like channels on a TV.
+
+- One column of buttons that share the sidebar's height: a handful of sites get large buttons with the icon above the name, and many sites shrink to compact rows.
+- Large icons only. Small favicons look blurry on a big button, so Siderail finds a site's large icons (its web app manifest, Apple touch icon, SVG icon), or you upload one, or it shows a coloured letter.
+- The button for the site in the current tab is highlighted.
+
+It started as a launcher for a living-room PC, but nothing in it is TV-specific.
+
+## Using it
+
+- **Add a site:** open it, then press **+ Add this site** at the bottom of the sidebar. Siderail suggests a name, a home address and the best icon it found; change any of them, then **Save**.
+- **Open a site:** click its button to load it in the current tab. Ctrl-, Shift- or middle-click opens it in a new tab.
+- **Edit, reorder or remove:** right-click a button.
+- **Icons:** in the editor, pick any of the icons found, the letter, or **Upload…**. You can also paste or drop an image onto the editor. **Light background behind the icon** puts a white square behind dark logos; Siderail ticks it automatically for mostly-black icons on transparency.
+
+### Permissions
+
+- **Tabs:** to read the current tab's address (for the highlight and for adding sites) and to load sites into it.
+- **Storage:** your list of sites, kept on this computer.
+- **Access your data for all websites** (optional, asked the first time you add a site): only used to download the page you're adding and its icons, to find a large icon and its name. Without it you can still add sites with an uploaded icon or a letter.
+
+Icons are stored inside the add-on as images, not links, so the sidebar works offline and sites can't see when it's shown.
+
+## Development
+
+Everything runs inside the flox environment, which provides Node, Firefox and geckodriver and installs the npm tools on first activation:
+
+```sh
+flox activate
+just            # list recipes
+just dev        # Firefox with the add-on loaded; your test sites persist in .dev-profile/
+just test       # unit tests
+just e2e        # end-to-end tests in headless Firefox
+just check      # lint + unit + e2e
+just build      # dist/siderail.xpi (unsigned)
+```
+
+Firefox loads unsigned add-ons temporarily (`just dev`, or `about:debugging`), so signing only matters for a permanent install.
+
+### Layout
+
+- `extension/manifest.json`: Manifest V3, Firefox 142+.
+- `extension/sidebar/`: the sidebar page. `sidebar.js` is the UI: the button list, the right-click menu, the editor and icon discovery, which needs the browser.
+- `extension/lib/`: pure logic with no browser APIs, all unit-tested:
+  - `match.js`: which saved site a tab address belongs to (same host, longest path prefix).
+  - `icons.js`: collecting icon candidates from `<link>` tags and the manifest, then ranking them. Icons under 64px are dropped.
+  - `names.js`: suggesting a name (manifest, then meta tags, then the page title, then the host) and a home address.
+  - `sites.js`: list operations (add or replace, remove, move).
+  - `letter.js`, `plate.js`: the letter fallback and the "needs a light background" check.
+
+### Tests
+
+- `test/unit/`: `node --test` against `extension/lib/`.
+- `test/e2e/`: Selenium and geckodriver drive the built add-on in headless Firefox against two local fixture sites (`fixtures.js`). One has a manifest and an Apple touch icon; the other has only a 16px favicon. They cover adding sites, the icon ranking, the letter fallback, the highlight, opening a site, and editing, reordering and removing.
+  - WebDriver can't reach the real sidebar panel, so the tests open the same page in a tab. There, buttons load into the tab used before it (`targetTab()` in `sidebar.js`).
+  - Firefox won't let WebDriver navigate a tab to an extension page, so the test opens it from Firefox's privileged context, which needs geckodriver's `--allow-system-access`.
+  - A pref pins the add-on's internal UUID, so its page has a known address.
+
+## Not done yet
+
+- Searching [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) for an icon, which matters most for self-hosted apps.
+- Syncing the list between computers (Firefox Sync's add-on storage is too small for icons, so it would sync the list and re-fetch icons).
+- An admin-set list through Firefox's policy file (managed storage), for kiosk and family machines.
+- Drag to reorder.
+- Signing and publishing on addons.mozilla.org.

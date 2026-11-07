@@ -1,0 +1,14 @@
+{
+  "name": "siderail",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Your sites as big buttons in the Firefox sidebar",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/unit/*.test.js"
+  },
+  "devDependencies": {
+    "selenium-webdriver": "^4.51.0",
+    "web-ext": "^10.8.0"
+  }
+}

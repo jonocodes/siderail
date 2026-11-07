@@ -1,0 +1,142 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f9f9fb;
+  --tile: #ebebef;
+  --tile-hover: #e0e0e6;
+  --text: #15141a;
+  --muted: #5b5b66;
+  --line: #d7d7db;
+  --accent: #0061e0;
+  --active: #dbe6fb;
+  --field: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #2b2a33;
+    --tile: #36353f;
+    --tile-hover: #42414d;
+    --text: #fbfbfe;
+    --muted: #9a99a6;
+    --line: #3a3944;
+    --accent: #7aa2ff;
+    --active: #3b4a6b;
+    --field: #1c1b22;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.25 system-ui, sans-serif;
+}
+main { flex: 1; min-height: 0; overflow: auto; }
+footer { flex: none; padding: 8px; border-top: 1px solid var(--line); }
+footer.hidden { display: none; }
+#status { margin: 0 0 6px; color: var(--muted); font-size: 13px; }
+#status:empty { display: none; }
+
+button, .button {
+  font: inherit;
+  color: var(--text);
+  background: var(--tile);
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+button:hover { background: var(--tile-hover); }
+#add { width: 100%; }
+
+/* Buttons share the height evenly up to a cap, so a few sites get big
+   buttons and many sites get compact rows. */
+.tiles {
+  height: 100%;
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: 1fr;
+  grid-auto-rows: minmax(28px, 160px);
+  align-content: start;
+}
+.tile {
+  container-type: size;
+  display: block;
+  border-radius: 10px;
+  background: var(--tile);
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+}
+.tile:hover { background: var(--tile-hover); }
+.tile:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tile.active { background: var(--active); box-shadow: inset 0 0 0 2px var(--accent); }
+.tile .in { width: 100%; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 10px; }
+.tile .icon { --s: min(64cqh, 44cqw); }
+.tile .name { font-size: clamp(13px, min(30cqh, 9cqw), 22px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Tall buttons stack the icon over the name. */
+@container (min-height: 110px) {
+  .tile .in { flex-direction: column; justify-content: center; gap: 8px; padding: 8px; }
+  .tile .icon { --s: min(52cqh, 70cqw); }
+  .tile .name { font-size: clamp(14px, min(13cqh, 11cqw), 22px); }
+}
+
+/* An icon: an image, an image on a light plate, or a letter tile. */
+.icon {
+  flex: none;
+  width: var(--s);
+  height: var(--s);
+  display: grid;
+  place-items: center;
+  border-radius: 22%;
+  font-size: calc(var(--s) * 0.55);
+  font-weight: 600;
+  color: #fff;
+}
+.icon img { width: 100%; height: 100%; object-fit: contain; }
+.icon.plate { background: #fff; padding: 9%; }
+
+.empty { padding: 24px 16px; color: var(--muted); text-align: center; }
+
+/* Right-click menu */
+.menu {
+  position: fixed;
+  min-width: 140px;
+  padding: 4px;
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
+  z-index: 10;
+}
+.menu button { display: block; width: 100%; text-align: left; background: none; }
+.menu button:hover:not(:disabled) { background: var(--tile-hover); }
+.menu button:disabled { color: var(--muted); cursor: default; }
+
+/* Editor */
+.editor { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.editor h2 { margin: 0; font-size: 15px; }
+.editor .preview { height: 120px; }
+.editor label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 13px; }
+.editor input[type="text"], .editor input[type="url"] {
+  font: inherit;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.editor .check { flex-direction: row; align-items: center; color: var(--text); }
+.editor .link { align-self: flex-start; padding: 0; background: none; color: var(--accent); font-size: 13px; }
+.editor .hint { margin: 0; color: var(--muted); font-size: 13px; }
+.choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px; }
+.choice { --s: 40px; aspect-ratio: 1; padding: 6px; display: grid; place-items: center; }
+.choice[aria-pressed="true"] { background: var(--active); box-shadow: inset 0 0 0 2px var(--accent); }
+.choice .label { font-size: 12px; color: var(--muted); }
+.actions { display: flex; gap: 6px; }
+.actions .primary { background: var(--accent); color: #fff; }
+.actions .danger { margin-left: auto; color: #e5383b; }
+.editor .label-row { color: var(--muted); font-size: 13px; margin-bottom: -6px; }
