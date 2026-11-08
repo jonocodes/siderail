@@ -18,7 +18,7 @@ It started as a launcher for a living-room PC, but nothing in it is TV-specific.
 
 - **Add a site:** open it, then press **+ Add this site** at the bottom of the sidebar. Siderail suggests a name, a home address and the best icon it found; change any of them, then **Save**.
 - **Open a site:** click its button to load it in the current tab. Ctrl-, Shift- or middle-click opens it in a new tab.
-- **Edit, reorder or remove:** right-click a button.
+- **Edit, reorder or remove:** right-click a button. Reorder one step at a time, or straight to the top or bottom.
 - **Icons:** in the editor, pick any of the icons found, the letter, or **Upload…**. You can also paste or drop an image onto the editor. **Light background behind the icon** puts a white square behind dark logos; Siderail ticks it automatically for mostly-black icons on transparency.
 
 ### Permissions
@@ -53,7 +53,7 @@ Firefox loads unsigned add-ons temporarily (`just dev`, or `about:debugging`), s
   - `match.js`: which saved site a tab address belongs to (same host, longest path prefix).
   - `icons.js`: collecting icon candidates from `<link>` tags and the manifest, then ranking them. Icons under 64px are dropped.
   - `names.js`: suggesting a name (manifest, then meta tags, then the page title, then the host) and a home address.
-  - `sites.js`: list operations (add or replace, remove, move).
+  - `sites.js`: list operations (add or replace, remove, move a step or to a position).
   - `letter.js`, `plate.js`: the letter fallback and the "needs a light background" check.
 
 ### Tests
@@ -71,6 +71,7 @@ These were settled while designing it. Revisit them only with a reason.
 - **The sidebar, not tabs.** Firefox's own vertical tabs were the obvious alternative. But every site stays loaded (and keeps playing audio in the background), and the icons are small. Siderail keeps one page and swaps what's in it.
 - **One column.** A wider sidebar makes bigger buttons, not more columns.
 - **Large icons or nothing.** Scaled-up 16px favicons were mocked up and rejected as too blurry. The fallback is a letter tile, never a favicon.
+- **Reorder from the right-click menu, not by dragging.** The list is set up once and rarely changed, so drag to reorder isn't worth its edge cases (telling clicks from drags, links dragging out of the sidebar, flaky WebDriver tests). The menu also works from the keyboard. See [#1](https://github.com/jonocodes/siderail/issues/1).
 - **No custom layouts.** Letting users supply their own HTML, or load a dashboard site into the sidebar with its links redirected into the main tab, was considered and dropped.
 - **Firefox only.** Chrome's side panel can't reopen by itself when the browser starts, which defeats a launcher that should always be there. Chrome also only installs extensions automatically through machine-wide policy.
 - **Signing through addons.mozilla.org.** Release Firefox only installs signed add-ons permanently. Building Firefox with signing turned off, or using Developer Edition, was rejected.
@@ -83,7 +84,6 @@ These were settled while designing it. Revisit them only with a reason.
 - Searching [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) for an icon, which matters most for self-hosted apps.
 - Syncing the list between computers (Firefox Sync's add-on storage is too small for icons, so it would sync the list and re-fetch icons).
 - An admin-set list through Firefox's policy file (managed storage), for kiosk and family machines.
-- Drag to reorder.
 - Signing and publishing on addons.mozilla.org.
 
 ## License

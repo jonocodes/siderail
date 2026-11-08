@@ -130,6 +130,14 @@ test("right-click menu edits, reorders and removes", async () => {
   await choose("Move up");
   await driver.wait(async () => (await tileNames())[0] === "Bravo TV", 5000);
 
+  await menuFor("Bravo");
+  await choose("Move to bottom");
+  await driver.wait(async () => (await tileNames())[1] === "Bravo TV", 5000);
+
+  await menuFor("Bravo");
+  await choose("Move to top");
+  await driver.wait(async () => (await tileNames())[0] === "Bravo TV", 5000);
+
   await menuFor("Alpha");
   await choose("Remove");
   await driver.wait(async () => (await tileNames()).length === 1, 5000);
