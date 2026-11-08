@@ -1,19 +1,9 @@
-// Drives the real extension in headless Firefox. The sidebar panel itself
-// can't be reached over WebDriver, so the test opens the same page as a tab:
-// there, buttons load into the tab used before it (see targetTab()).
+// Drives the real extension in headless Firefox against local fixture sites.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { Builder, By, until } from "selenium-webdriver";
-import firefox from "selenium-webdriver/firefox.js";
+import { By, until } from "selenium-webdriver";
 import { startFixtures } from "./fixtures.js";
-
-const XPI = new URL("../../dist/siderail.xpi", import.meta.url).pathname;
-const ADDON_ID = "siderail@jonocodes";
-// Pinning the extension's internal UUID gives its pages a known address.
-const UUID = "5e0b1a8c-7d2f-4b61-9a3e-51de0a11c0de";
-const SIDEBAR = `moz-extension://${UUID}/sidebar/sidebar.html`;
-const which = (cmd) => execFileSync("which", [cmd]).toString().trim();
+import { launch } from "./browser.js";
 
 let driver;
 let sites;
@@ -22,30 +12,7 @@ let railTab;
 
 before(async () => {
   sites = await startFixtures();
-  const options = new firefox.Options()
-    .setBinary(process.env.FIREFOX_BIN ?? which("firefox"))
-    .addArguments("-headless")
-    .setPreference("extensions.webextensions.uuids", JSON.stringify({ [ADDON_ID]: UUID }))
-    // Grant optional permissions without a prompt.
-    .setPreference("extensions.webextOptionalPermissionPrompts", false);
-  driver = await new Builder()
-    .forBrowser("firefox")
-    .setFirefoxOptions(options)
-    // System access lets the test open the extension's page from Firefox's own
-    // (chrome) context; WebDriver refuses to navigate a tab to it directly.
-    .setFirefoxService(new firefox.ServiceBuilder(which("geckodriver")).addArguments("--allow-system-access"))
-    .build();
-  await driver.installAddon(XPI, true);
-  siteTab = await driver.getWindowHandle();
-  await driver.get(sites.alpha);
-  await driver.setContext(firefox.Context.CHROME);
-  await driver.executeScript(
-    "gBrowser.selectedTab = gBrowser.addTab(arguments[0], { triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal() });",
-    SIDEBAR,
-  );
-  await driver.setContext(firefox.Context.CONTENT);
-  railTab = (await driver.getAllWindowHandles()).find((h) => h !== siteTab);
-  await driver.switchTo().window(railTab);
+  ({ driver, siteTab, railTab } = await launch({ firstUrl: sites.alpha }));
 });
 
 after(async () => {

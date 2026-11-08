@@ -6,10 +6,12 @@ A Firefox add-on that shows your chosen sites as big buttons in the sidebar. Cli
 - Large icons only. Small favicons look blurry on a big button, so Siderail finds a site's large icons (its web app manifest, Apple touch icon, SVG icon), or you upload one, or it shows a coloured letter.
 - The button for the site in the current tab is highlighted.
 
-It started as a launcher for a living-room PC, but nothing in it is TV-specific.
+It started as a launcher for a living-room PC, but nothing in it is TV-specific: it works just as well as a simple console for someone who only needs a few sites.
 
 <p>
-  <img src="docs/screenshot-sidebar.png" alt="The sidebar with nine streaming and self-hosted services as large buttons, Netflix highlighted" width="180">
+  <img src="docs/screenshot-sidebar.png" alt="The sidebar with seven streaming and self-hosted services as large buttons, Netflix highlighted" width="180">
+  &nbsp;
+  <img src="docs/screenshot-family.png" alt="The sidebar in light mode with Gmail, Docs, NY Times, Wikipedia, Photos and YouTube, Gmail highlighted" width="180">
   &nbsp;
   <img src="docs/screenshot-editor.png" alt="Adding Plex: name, address, and a choice of the icons found on the site, a letter tile or an upload" width="180">
 </p>
@@ -41,6 +43,7 @@ just test       # unit tests
 just e2e        # end-to-end tests in headless Firefox
 just check      # lint + unit + e2e
 just build      # dist/siderail.xpi (unsigned)
+just screenshots  # regenerate the README screenshots
 ```
 
 Firefox loads unsigned add-ons temporarily (`just dev`, or `about:debugging`), so signing only matters for a permanent install.
@@ -63,6 +66,15 @@ Firefox loads unsigned add-ons temporarily (`just dev`, or `about:debugging`), s
   - WebDriver can't reach the real sidebar panel, so the tests open the same page in a tab. There, buttons load into the tab used before it (`targetTab()` in `sidebar.js`).
   - Firefox won't let WebDriver navigate a tab to an extension page, so the test opens it from Firefox's privileged context, which needs geckodriver's `--allow-system-access`.
   - A pref pins the add-on's internal UUID, so its page has a known address.
+
+### Screenshots
+
+`just screenshots` regenerates `docs/screenshot-*.png` from `docs/screenshots.json`, so change that file rather than editing the images. `just screenshots editor` redoes only the shots whose file name contains "editor".
+
+- **What's in them:** the scene file has named site lists (`tv`, `family`) and the shots: which list, the size and theme, the page open in the current tab (its button is highlighted) and, for the editor, the site being added.
+- **Icons** come from [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) by name (`"plex"`), or any URL (NY Times is from [selfh.st/icons](https://github.com/selfhst/icons)), pinned to a commit so the images only change when the scene does. Generating them needs internet access for the icons only.
+- **How:** `scripts/screenshots.js` reuses the e2e setup (`test/e2e/browser.js`) and sends all of Firefox's traffic through a local proxy that serves a stand-in page for each site, so no real site is visited. Each stand-in's manifest offers the scene's icon, and every site is added through the real **+ Add this site** editor, so icon sizing and the light background are decided by the add-on itself. HSTS preloading and https upgrades are turned off for this.
+- Output is byte-identical between runs on the same machine; fonts come from the system, so another machine may differ slightly.
 
 ## Design decisions
 

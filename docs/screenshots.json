@@ -1,0 +1,52 @@
+{
+  "icons": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons@59f1e9a4108f4f510f41e9588f078631de1e1405/png/",
+  "width": 180,
+  "theme": "dark",
+  "lists": {
+    "tv": [
+      { "name": "Plex", "url": "https://app.plex.tv/", "icon": "plex" },
+      { "name": "Netflix", "url": "https://www.netflix.com/", "icon": "netflix" },
+      { "name": "Disney+", "url": "https://www.disneyplus.com/", "icon": "disney-plus" },
+      { "name": "Apple TV", "url": "https://tv.apple.com/", "icon": "apple-tv-plus-light" },
+      { "name": "Spotify", "url": "https://open.spotify.com/", "icon": "spotify" },
+      { "name": "Jellyfin", "url": "http://localhost:8096/", "icon": "jellyfin" },
+      { "name": "Immich", "url": "http://localhost:2283/", "icon": "immich" }
+    ],
+    "family": [
+      { "name": "Gmail", "url": "https://mail.google.com/", "icon": "gmail" },
+      { "name": "Docs", "url": "https://docs.google.com/", "icon": "google-docs" },
+      { "name": "NY Times", "url": "https://www.nytimes.com/", "icon": "https://cdn.jsdelivr.net/gh/selfhst/icons@87a5dfd901a341e271eb453ffebce6c5a88c308e/png/the-new-york-times.png" },
+      { "name": "Wikipedia", "url": "https://www.wikipedia.org/", "icon": "wikipedia" },
+      { "name": "Photos", "url": "https://photos.google.com/", "icon": "google-photos" },
+      { "name": "YouTube", "url": "https://www.youtube.com/", "icon": "youtube" }
+    ]
+  },
+  "shots": [
+    {
+      "file": "screenshot-sidebar.png",
+      "sites": "tv",
+      "height": 624,
+      "page": "https://www.netflix.com/browse"
+    },
+    {
+      "file": "screenshot-family.png",
+      "sites": "family",
+      "theme": "light",
+      "height": 624,
+      "page": "https://mail.google.com/mail/u/0/"
+    },
+    {
+      "file": "screenshot-editor.png",
+      "sites": "tv",
+      "height": "fit",
+      "page": "https://app.plex.tv/desktop",
+      "add": {
+        "name": "Plex",
+        "address": "https://app.plex.tv/",
+        "manifestIcon": "plex",
+        "touchIcon": "plex-light",
+        "svgIcon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons@59f1e9a4108f4f510f41e9588f078631de1e1405/svg/plex.svg"
+      }
+    }
+  ]
+}

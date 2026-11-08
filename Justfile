@@ -33,3 +33,8 @@ e2e: build
 
 # Everything CI would run.
 check: lint test e2e
+
+# Regenerate the README screenshots from docs/screenshots.json (needs internet
+# for the icons). `just screenshots editor` redoes only matching shots.
+screenshots *shot: build
+    node scripts/screenshots.js {{shot}}
