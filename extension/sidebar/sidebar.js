@@ -1,5 +1,5 @@
 import { matchSite } from "../lib/match.js";
-import { makeSite, upsert, remove, move } from "../lib/sites.js";
+import { makeSite, upsert, remove, move, moveTo } from "../lib/sites.js";
 import {
   candidatesFromLinks,
   candidatesFromManifest,
@@ -152,8 +152,10 @@ function showMenu(e, site) {
     "div",
     { class: "menu", role: "menu" },
     item("Edit", () => openEditor(site)),
+    item("Move to top", () => save(moveTo(sites, site.id, 0)), i === 0),
     item("Move up", () => save(move(sites, site.id, -1)), i === 0),
     item("Move down", () => save(move(sites, site.id, 1)), i === sites.length - 1),
+    item("Move to bottom", () => save(moveTo(sites, site.id, sites.length - 1)), i === sites.length - 1),
     item("Remove", () => save(remove(sites, site.id))),
   );
   document.body.append(menu);

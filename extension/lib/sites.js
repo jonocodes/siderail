@@ -26,3 +26,10 @@ export function move(sites, id, delta) {
   [out[from], out[to]] = [out[to], out[from]];
   return out;
 }
+
+// Move a site to index `to`, shifting the others; out-of-range moves do nothing.
+export function moveTo(sites, id, to) {
+  const from = sites.findIndex((s) => s.id === id);
+  if (from === -1 || to < 0 || to >= sites.length) return sites;
+  return sites.toSpliced(from, 1).toSpliced(to, 0, sites[from]);
+}

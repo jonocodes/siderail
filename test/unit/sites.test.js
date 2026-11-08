@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeSite, upsert, remove, move } from "../../extension/lib/sites.js";
+import { makeSite, upsert, remove, move, moveTo } from "../../extension/lib/sites.js";
 
 const a = { id: "a", name: "A", url: "https://a.test/" };
 const b = { id: "b", name: "B", url: "https://b.test/" };
@@ -31,9 +31,19 @@ test("move swaps with a neighbour and ignores moves off the ends", () => {
   assert.deepEqual(move([a, b, c], "c", 1), [a, b, c]);
 });
 
+test("moveTo moves a site to an index, shifting the rest", () => {
+  assert.deepEqual(moveTo([a, b, c], "c", 0), [c, a, b]);
+  assert.deepEqual(moveTo([a, b, c], "a", 2), [b, c, a]);
+  assert.deepEqual(moveTo([a, b, c], "b", 1), [a, b, c]);
+  assert.deepEqual(moveTo([a, b, c], "x", 0), [a, b, c]);
+  assert.deepEqual(moveTo([a, b, c], "a", 9), [a, b, c]);
+  assert.deepEqual(moveTo([a, b, c], "a", -1), [a, b, c]);
+});
+
 test("helpers never mutate their input", () => {
   const list = [a, b, c];
   move(list, "a", 1);
+  moveTo(list, "a", 2);
   remove(list, "a");
   upsert(list, { ...a, name: "x" });
   assert.deepEqual(list, [a, b, c]);
