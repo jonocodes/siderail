@@ -48,6 +48,8 @@ just screenshots  # regenerate the README screenshots
 
 Firefox loads unsigned add-ons temporarily (`just dev`, or `about:debugging`), so signing only matters for a permanent install.
 
+GitHub Actions runs `just check` in the same flox environment on every pull request and push to `main` (`.github/workflows/check.yml`).
+
 ### Layout
 
 - `extension/manifest.json`: Manifest V3, Firefox 142+.

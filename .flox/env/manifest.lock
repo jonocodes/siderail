@@ -1,0 +1,388 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "schema-version": "1.19.0",
+    "install": {
+      "firefox": {
+        "pkg-path": "firefox"
+      },
+      "geckodriver": {
+        "pkg-path": "geckodriver"
+      },
+      "just": {
+        "pkg-path": "just"
+      },
+      "nodejs": {
+        "pkg-path": "nodejs"
+      }
+    },
+    "hook": {
+      "on-activate": "  [ -d node_modules ] || npm ci --silent\n"
+    },
+    "profile": {},
+    "options": {}
+  },
+  "packages": [
+    {
+      "attr_path": "firefox",
+      "broken": false,
+      "derivation": "/nix/store/ygr8h96k844s1d1x26s8vmg4ab499q2c-firefox-159.0.1.drv",
+      "description": "Web browser built from Firefox source tree",
+      "install_id": "firefox",
+      "license": "MPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "firefox-159.0.1",
+      "pname": "firefox",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T05:47:44.144844Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "159.0.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/dmahdymyc3a9a4zk7hbqipbcsgmrs2m0-firefox-159.0.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "firefox",
+      "broken": false,
+      "derivation": "/nix/store/22vdd381i3mqirdsmh52vcr1gqqacl7s-firefox-159.0.1.drv",
+      "description": "Web browser built from Firefox source tree",
+      "install_id": "firefox",
+      "license": "MPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "firefox-159.0.1",
+      "pname": "firefox",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T06:15:19.133413Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "159.0.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/c1ap9k0rwc7gvac4rb6l0nnswzvp437f-firefox-159.0.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "firefox",
+      "broken": false,
+      "derivation": "/nix/store/nqm99i0rjz6nhrg7j5ngznni8sg0x7fx-firefox-159.0.1.drv",
+      "description": "Web browser built from Firefox source tree",
+      "install_id": "firefox",
+      "license": "MPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "firefox-159.0.1",
+      "pname": "firefox",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T06:44:47.196449Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "159.0.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/1sq19d9y3ccsb2pm1pb4y5i2zf6z7i2v-firefox-159.0.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "geckodriver",
+      "broken": false,
+      "derivation": "/nix/store/vhk9l3x7d2bcwci5ab001l7zm84vjby7-geckodriver-0.37.1.drv",
+      "description": "Proxy for using W3C WebDriver-compatible clients to interact with Gecko-based browsers",
+      "install_id": "geckodriver",
+      "license": "MPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "geckodriver-0.37.1",
+      "pname": "geckodriver",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T05:47:44.147667Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.37.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/3x3jv3rmgvw875vv74i1lzypmrblkmw8-geckodriver-0.37.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "geckodriver",
+      "broken": false,
+      "derivation": "/nix/store/l20w95xx64hvr7gdhx993hnfvv5n1503-geckodriver-0.37.1.drv",
+      "description": "Proxy for using W3C WebDriver-compatible clients to interact with Gecko-based browsers",
+      "install_id": "geckodriver",
+      "license": "MPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "geckodriver-0.37.1",
+      "pname": "geckodriver",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T06:15:19.161241Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.37.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/0ng68zwwz63nzql69fzkb0gxv7knibaq-geckodriver-0.37.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "geckodriver",
+      "broken": false,
+      "derivation": "/nix/store/k30if4q8pv9lryvqyxqahd2in5yg29hi-geckodriver-0.37.1.drv",
+      "description": "Proxy for using W3C WebDriver-compatible clients to interact with Gecko-based browsers",
+      "install_id": "geckodriver",
+      "license": "MPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "geckodriver-0.37.1",
+      "pname": "geckodriver",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T06:44:47.200687Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "0.37.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/620bkgf1vwsp3wnpq02xqrpi86wfvbdn-geckodriver-0.37.1"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "just",
+      "broken": false,
+      "derivation": "/nix/store/nd2yzxrw3sbgy9291iz1mq2jac4afgws-just-1.59.0.drv",
+      "description": "Handy way to save and run project-specific commands",
+      "install_id": "just",
+      "license": "CC0-1.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "just-1.59.0",
+      "pname": "just",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T05:47:44.232500Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.59.0",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/flwwcj6jb5jz40c87p89b20qbfggpkg0-just-1.59.0-doc",
+        "man": "/nix/store/q5pm45bzfrnaddhca1v4rsb02vcwvwi7-just-1.59.0-man",
+        "out": "/nix/store/q8iw11cad522s3dskzwwcnmr43rndqhq-just-1.59.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "just",
+      "broken": false,
+      "derivation": "/nix/store/niyr27nxw27x21134cas8cvlf30glvd7-just-1.59.0.drv",
+      "description": "Handy way to save and run project-specific commands",
+      "install_id": "just",
+      "license": "CC0-1.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "just-1.59.0",
+      "pname": "just",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T06:15:19.271575Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.59.0",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/wixkpjsbvg6sz7d9fm0v13n5d1vfbmhw-just-1.59.0-doc",
+        "man": "/nix/store/xxawhi4pz0v0jjzdaihiv8plwl98axjv-just-1.59.0-man",
+        "out": "/nix/store/fc2zj8bqk0x7n8lpxw1x9l4pmrirwgjb-just-1.59.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "just",
+      "broken": false,
+      "derivation": "/nix/store/ppz0nffrx348frs11slm5wir710jsn1y-just-1.59.0.drv",
+      "description": "Handy way to save and run project-specific commands",
+      "install_id": "just",
+      "license": "CC0-1.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "just-1.59.0",
+      "pname": "just",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T06:44:47.293283Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.59.0",
+      "outputs_to_install": [
+        "man",
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/w3q32dxwan4rh2qhf4bsz2v7z896r1pl-just-1.59.0-doc",
+        "man": "/nix/store/9ja014g5v56v84dqbi6vg7i13gwcf54x-just-1.59.0-man",
+        "out": "/nix/store/vzs14hc7daw3q253j5vl1lbazxcx2n7p-just-1.59.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs",
+      "broken": false,
+      "derivation": "/nix/store/i2p2vcalxpyikyrihlf83ccvyn73rfg4-nodejs-24.21.0.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "nodejs-24.21.0",
+      "pname": "nodejs",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T05:47:44.264923Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "24.21.0",
+      "outputs_to_install": [
+        "out",
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/i376rizbw75rswsg2qlk47wj4zz3biqq-nodejs-24.21.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs",
+      "broken": false,
+      "derivation": "/nix/store/pbpcbj48qdzmxzlj4p4mnfy226dq09h7-nodejs-24.21.0.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "nodejs-24.21.0",
+      "pname": "nodejs",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T06:15:19.313924Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "24.21.0",
+      "outputs_to_install": [
+        "out",
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/6vlx51wp6rjcsb1gcx54hfb7ndf3k2h8-nodejs-24.21.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "nodejs",
+      "broken": false,
+      "derivation": "/nix/store/a7mzwdph5vkavini0lj77xph53qhgjlf-nodejs-24.21.0.drv",
+      "description": "Event-driven I/O framework for the V8 JavaScript engine",
+      "install_id": "nodejs",
+      "license": "MIT",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "name": "nodejs-24.21.0",
+      "pname": "nodejs",
+      "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+      "rev_count": 1107793,
+      "rev_date": "2026-11-03T17:13:28Z",
+      "scrape_date": "2026-11-05T06:44:47.462182Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "24.21.0",
+      "outputs_to_install": [
+        "out",
+        "out",
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/j1j9b0w3mhpccdli73ycj5w7nf6fkzqz-nodejs-24.21.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}
