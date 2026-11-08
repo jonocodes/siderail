@@ -17,8 +17,7 @@
       { "name": "Docs", "url": "https://docs.google.com/", "icon": "google-docs" },
       { "name": "NY Times", "url": "https://www.nytimes.com/", "icon": "https://cdn.jsdelivr.net/gh/selfhst/icons@87a5dfd901a341e271eb453ffebce6c5a88c308e/png/the-new-york-times.png" },
       { "name": "Wikipedia", "url": "https://www.wikipedia.org/", "icon": "wikipedia" },
-      { "name": "Photos", "url": "https://photos.google.com/", "icon": "google-photos" },
-      { "name": "YouTube", "url": "https://www.youtube.com/", "icon": "youtube" }
+      { "name": "Photos", "url": "https://photos.google.com/", "icon": "google-photos" }
     ]
   },
   "shots": [
@@ -32,7 +31,7 @@
       "file": "screenshot-family.png",
       "sites": "family",
       "theme": "light",
-      "height": 624,
+      "height": 640,
       "page": "https://mail.google.com/mail/u/0/"
     },
     {

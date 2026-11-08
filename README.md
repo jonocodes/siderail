@@ -11,7 +11,7 @@ It started as a launcher for a living-room PC, but nothing in it is TV-specific:
 <p>
   <img src="docs/screenshot-sidebar.png" alt="The sidebar with seven streaming and self-hosted services as large buttons, Netflix highlighted" width="180">
   &nbsp;
-  <img src="docs/screenshot-family.png" alt="The sidebar in light mode with Gmail, Docs, NY Times, Wikipedia, Photos and YouTube, Gmail highlighted" width="180">
+  <img src="docs/screenshot-family.png" alt="The sidebar in light mode with Gmail, Docs, NY Times, Wikipedia and Photos, Gmail highlighted" width="180">
   &nbsp;
   <img src="docs/screenshot-editor.png" alt="Adding Plex: name, address, and a choice of the icons found on the site, a letter tile or an upload" width="180">
 </p>
