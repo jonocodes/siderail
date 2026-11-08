@@ -1,0 +1,18 @@
+# Runs `just check` (lint, unit and e2e tests) in the same flox environment
+# used locally, so CI and dev share Node, Firefox and geckodriver versions.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: flox/install-flox-action@v2
+      - uses: flox/activate-action@v2
+        with:
+          command: just check
