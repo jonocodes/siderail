@@ -1,5 +1,5 @@
-# Runs `just check` (lint, unit and e2e tests) in the same flox environment
-# used locally, so CI and dev share Node, Firefox and geckodriver versions.
+# Runs `just check` (lint, unit and e2e tests) with the Firefox and
+# geckodriver that come with GitHub's Ubuntu runner.
 name: check
 
 on:
@@ -12,7 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: flox/install-flox-action@v2
-      - uses: flox/activate-action@v2
+      - uses: actions/setup-node@v7
         with:
-          command: just check
+          node-version: 24
+          cache: npm
+      - uses: extractions/setup-just@v4
+      # The runner image keeps geckodriver here.
+      - run: echo "$GECKOWEBDRIVER" >> "$GITHUB_PATH"
+      - run: just setup
+      - run: just check

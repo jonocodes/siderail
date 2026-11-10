@@ -1,5 +1,5 @@
-# siderail — common commands. Run inside `flox activate` (provides node,
-# firefox, geckodriver).
+# siderail — common commands. Needs node, firefox and geckodriver on PATH;
+# set FIREFOX_BIN to use another Firefox.
 
 # `just` lists recipes.
 default:
@@ -11,7 +11,7 @@ setup:
 
 # Run Firefox with the extension loaded; sites you add persist in .dev-profile/.
 dev:
-    npx web-ext run -s extension --firefox="$(which firefox)" \
+    npx web-ext run -s extension --firefox="${FIREFOX_BIN:-$(which firefox)}" \
         --profile-create-if-missing --keep-profile-changes -p .dev-profile \
         --start-url about:blank
 

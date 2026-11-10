@@ -33,10 +33,10 @@ Icons are stored inside the add-on as images, not links, so the sidebar works of
 
 ## Development
 
-Everything runs inside the flox environment, which provides Node, Firefox and geckodriver and installs the npm tools on first activation:
+You need Node 22.2 or later, Firefox 142 or later, geckodriver and [just](https://just.systems). `just` finds Firefox on your `PATH`; set `FIREFOX_BIN` to use a different one (on macOS, `/Applications/Firefox.app/Contents/MacOS/firefox`).
 
 ```sh
-flox activate
+just setup      # install the npm tools (web-ext, selenium)
 just            # list recipes
 just dev        # Firefox with the add-on loaded; your test sites persist in .dev-profile/
 just test       # unit tests
@@ -48,7 +48,7 @@ just screenshots  # regenerate the README screenshots
 
 Firefox loads unsigned add-ons temporarily (`just dev`, or `about:debugging`), so signing only matters for a permanent install.
 
-GitHub Actions runs `just check` in the same flox environment on every pull request and push to `main` (`.github/workflows/check.yml`).
+GitHub Actions runs `just check` on every pull request and push to `main` (`.github/workflows/check.yml`), using the Firefox and geckodriver that come with its Ubuntu runner.
 
 ### Layout
 
