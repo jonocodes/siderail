@@ -94,7 +94,6 @@ Siderail is published as a listed add-on on addons.mozilla.org (AMO), which sign
 - **The listing text** (summary, description, category, licence, links) is in `release/amo-metadata.json` and is sent with every version, so change it there, not on the AMO website. A unit test checks it against AMO's rules.
 - **Credentials:** the workflow needs the repository secrets `AMO_API_KEY` and `AMO_API_SECRET`, the JWT issuer and secret from [AMO's API keys page](https://addons.mozilla.org/developers/addon/api/key/). To submit from your own machine, set `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET` and run `just amo-submit "notes"`.
 - **Versions** are plain `major.minor.patch`. AMO refuses a version number it has seen before, even from a failed submission, so a retry needs a new number.
-- **The licence on AMO is `GPL-3.0-only`**: AMO's list has no "or later" option. The code itself stays GPL-3.0-or-later (`LICENSE`).
 
 ## Design decisions
 
@@ -121,4 +120,4 @@ These were settled while designing it. Revisit them only with a reason.
 
 ## License
 
-[GPL-3.0-or-later](LICENSE).
+[GPL-3.0-only](LICENSE).

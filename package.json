@@ -2,7 +2,7 @@
   "name": "siderail",
   "private": true,
   "description": "Your sites as big buttons in the Firefox sidebar",
-  "license": "GPL-3.0-or-later",
+  "license": "GPL-3.0-only",
   "type": "module",
   "engines": {
     "node": ">=22.2"

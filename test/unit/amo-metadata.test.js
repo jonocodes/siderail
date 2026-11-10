@@ -17,6 +17,11 @@ test("the AMO listing has what a first listed submission requires", () => {
   assert.ok(LICENSES.includes(metadata.version.license), metadata.version.license);
 });
 
+test("the AMO listing's licence is the project's", async () => {
+  const pkg = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
+  assert.equal(metadata.version.license, pkg.license);
+});
+
 test("release notes are added per release, not kept in the file", () => {
   assert.equal(metadata.version.release_notes, undefined);
 });
