@@ -1,6 +1,6 @@
 // Two fake sites on one local server, told apart by host name:
 //   127.0.0.1  "Alpha" - a manifest with a 512px icon, a 180px apple touch
-//              icon, an SVG icon without a viewBox and a 16px favicon (the
+//              icon, a tall SVG icon without a viewBox and a 16px favicon (the
 //              512px one should win)
 //   localhost  "Bravo" - only a 16px favicon (should fall back to a letter)
 // plus a deep page on Bravo, and a page on localhost that sends the add-on's
@@ -40,7 +40,7 @@ export function png(size, [r, g, b], { fill = 1 } = {}) {
 
 const html = (title, head) => `<!doctype html><html><head><title>${title}</title>${head}</head><body><h1>${title}</h1></body></html>`;
 
-export const SVG_LOGO = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="40" fill="#3a7"/></svg>';
+export const SVG_LOGO = '<svg xmlns="http://www.w3.org/2000/svg" width="50" height="100"><ellipse cx="25" cy="50" rx="20" ry="45" fill="#3a7"/></svg>';
 
 const SITES = {
   "127.0.0.1": {

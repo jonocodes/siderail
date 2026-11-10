@@ -47,6 +47,9 @@ footer.hidden { display: none; }
   width: var(--s);
   height: var(--s);
   display: grid;
+  /* One cell exactly the icon's size, so an image's 100% height has
+     something to be 100% of; otherwise a tall SVG keeps its own shape. */
+  grid-template: 100% / 100%;
   place-items: center;
   border-radius: 22%;
   font-size: calc(var(--s) * 0.55);

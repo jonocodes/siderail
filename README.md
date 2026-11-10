@@ -23,6 +23,7 @@ It started as a launcher for a living-room PC, but nothing in it is TV-specific:
 - **Edit, reorder or remove:** right-click a button. Reorder one step at a time, or straight to the top or bottom. **Undo** under the buttons brings back a site you removed by mistake.
 - **Icons:** in the editor, pick any of the icons found, the letter, or **Upload…**. You can also paste or drop an image onto the editor. **Light background behind the icon** puts a white square behind dark logos; Siderail ticks it automatically for mostly-black icons on transparency.
 - **Back up or move your list:** Siderail's options (in `about:addons`, or **Import a backup** in the empty sidebar) export your list to a file, icons included, and import one back. Importing adds to your list; a site you already have is replaced, not duplicated.
+  [`docs/example-export.json`](docs/example-export.json) is an example: four streaming sites, two with PNG icons and two (Netflix, Disney+) with SVGs from dashboard-icons.
 
 ### Permissions
 

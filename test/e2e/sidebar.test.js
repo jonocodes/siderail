@@ -136,7 +136,7 @@ test("an uploaded dark logo on transparency gets a light background", async () =
   assert.deepEqual(await tileNames(), ["Alpha", "Bravo"]);
 });
 
-test("an SVG icon found from the editor is kept as SVG, made to scale", async () => {
+test("an SVG icon found from the editor is kept as SVG, made to scale and fit", async () => {
   await menu(sites.alpha, "Edit");
   await (await button("Find icons on the site")).click();
   await (await $('.choice[data-size="svg"]')).click();
@@ -144,8 +144,14 @@ test("an SVG icon found from the editor is kept as SVG, made to scale", async ()
   const src = await (await $(`.tile[title="${sites.alpha}"] img`)).getAttribute("src");
   assert.match(src, /^data:image\/svg\+xml;base64,/);
   const svg = Buffer.from(src.split(",")[1], "base64").toString();
-  assert.match(svg, /<circle /);
-  assert.match(svg, /viewBox="0 0 100 100"/);
+  assert.match(svg, /<ellipse /);
+  assert.match(svg, /viewBox="0 0 50 100"/);
+  // A tall image is fitted inside its square icon rather than overflowing it.
+  const [img, box] = await driver.executeScript(
+    "const img = document.querySelector(`.tile[title='${arguments[0]}'] img`); return [img, img.parentElement].map((e) => e.getBoundingClientRect().toJSON());",
+    sites.alpha,
+  );
+  assert.ok(img.height <= box.height + 0.5, `image ${img.height}px tall in a ${box.height}px icon`);
 });
 
 test("right-click menu edits, reorders and removes, and removing can be undone", async () => {

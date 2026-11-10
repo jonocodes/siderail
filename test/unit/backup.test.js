@@ -47,3 +47,15 @@ test("sites that the sidebar couldn't safely show are refused, naming which", ()
   ];
   for (const [site, message] of cases) assert.throws(() => fromBackup(backup([letter, site])), message);
 });
+
+test("the example export in docs/ still imports, with both PNG and SVG icons", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const sites = fromBackup(await readFile(new URL("../../docs/example-export.json", import.meta.url), "utf8"));
+  assert.deepEqual(sites.map((s) => s.name), ["YouTube", "Netflix", "Disney+", "YouTube TV"]);
+  assert.deepEqual(sites.map((s) => s.icon.slice(0, s.icon.indexOf(";"))), [
+    "data:image/png",
+    "data:image/svg+xml",
+    "data:image/svg+xml",
+    "data:image/png",
+  ]);
+});
