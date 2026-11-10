@@ -10,6 +10,7 @@ import {
 import { pickName, homeUrl } from "../lib/names.js";
 import { letterFor, colorFor } from "../lib/letter.js";
 import { suggestPlate } from "../lib/plate.js";
+import { loadSites, saveSites } from "../storage.js";
 
 // Icons are stored as square PNGs this many pixels across, except SVGs,
 // which stay SVG so they're sharp at any size, unless they're over
@@ -54,14 +55,10 @@ function setStatus(...content) {
 
 // ---- Storage
 
-// Saved alongside the list so a later change to its format can tell old
-// lists apart and migrate them. The format is described in lib/sites.js.
-const STORAGE_VERSION = 1;
-
 async function save(next) {
   sites = next;
   setStatus("");
-  await browser.storage.local.set({ version: STORAGE_VERSION, sites });
+  await saveSites(sites);
   render();
 }
 
@@ -118,7 +115,13 @@ function renderList() {
   footer.classList.remove("hidden");
   if (!sites.length) {
     main.replaceChildren(
-      h("div", { class: "empty" }, h("p", {}, "No sites yet."), h("p", {}, "Open a website, then press “Add this site”.")),
+      h(
+        "div",
+        { class: "empty" },
+        h("p", {}, "No sites yet."),
+        h("p", {}, "Open a website, then press “Add this site”."),
+        h("p", {}, h("button", { type: "button", class: "link", onclick: () => browser.runtime.openOptionsPage() }, "Import a backup")),
+      ),
     );
     return;
   }
@@ -599,6 +602,6 @@ function dataUrl(blob) {
 
 // ---- Start
 
-({ sites } = await browser.storage.local.get({ sites: [] }));
+sites = await loadSites();
 render();
 await refreshActive();

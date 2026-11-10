@@ -3,21 +3,26 @@
 // the ones before it left behind.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { By, Key, until } from "selenium-webdriver";
 import { startFixtures, png } from "./fixtures.js";
-import { launch } from "./browser.js";
+import { launch, openPage } from "./browser.js";
 
 let driver;
 let sites;
 let siteTab;
 let railTab;
+let downloads;
 
 before(async () => {
   sites = await startFixtures();
-  ({ driver, siteTab, railTab } = await launch({ firstUrl: sites.alpha }));
+  downloads = await mkdtemp(join(tmpdir(), "siderail-downloads-"));
+  ({ driver, siteTab, railTab } = await launch({
+    firstUrl: sites.alpha,
+    prefs: { "browser.download.folderList": 2, "browser.download.dir": downloads, "browser.download.useDownloadDir": true },
+  }));
 });
 
 after(async () => {
@@ -200,4 +205,52 @@ test("a page that sends the add-on to a sign-in page elsewhere keeps its own nam
   assert.equal(await inputValue("url"), sites.bravo);
   assert.equal(await pressedSize(), "letter");
   await (await button("Cancel")).click();
+});
+
+test("exports the list, icons included, and imports it back", async () => {
+  // Export from the options page.
+  const optionsTab = await openPage(driver, "options/options.html");
+  await (await $("#export")).click();
+  let file = null;
+  await driver.wait(async () => {
+    file = (await readdir(downloads)).find((f) => /^siderail-[\d-]+\.json$/.test(f));
+    return file && (await readFile(join(downloads, file), "utf8")).endsWith("}");
+  }, 5000);
+  const exported = JSON.parse(await readFile(join(downloads, file), "utf8"));
+  assert.equal(exported.format, "siderail");
+  assert.deepEqual(exported.sites.map((s) => [s.name, s.plate]), [["Bravo TV", true]]);
+  assert.match(exported.sites[0].icon, /^data:image\/png;base64,/);
+  assert.match(await (await $("#status")).getText(), /Exported 1 site\./);
+  await driver.close();
+  await driver.switchTo().window(railTab);
+
+  // Remove everything; the empty sidebar links to the options page to import.
+  await menu(`${sites.bravo}deep/page`, "Remove");
+  await $(".empty");
+  const before = await driver.getAllWindowHandles();
+  await (await $(".empty button.link")).click();
+  await driver.wait(async () => (await driver.getAllWindowHandles()).length > before.length, 5000);
+  const importTab = (await driver.getAllWindowHandles()).find((h) => !before.includes(h));
+  await driver.switchTo().window(importTab);
+  await driver.wait(until.urlContains("options/options.html"), 5000);
+
+  const importFile = async (path) => {
+    await (await $("#file")).sendKeys(path);
+    await driver.wait(async () => (await (await $("#status")).getText()) !== "", 5000);
+    const text = await (await $("#status")).getText();
+    await driver.executeScript("document.getElementById('status').textContent = '';");
+    return text;
+  };
+  assert.equal(await importFile(join(downloads, file)), "Imported 1 site: 1 added, 0 replaced.");
+  // Importing again replaces rather than duplicates.
+  assert.equal(await importFile(join(downloads, file)), "Imported 1 site: 0 added, 1 replaced.");
+  const junk = join(downloads, "junk.json");
+  await writeFile(junk, '{"hello": "world"}');
+  assert.equal(await importFile(junk), "That file isn't a Siderail backup.");
+  await driver.close();
+
+  await driver.switchTo().window(railTab);
+  await driver.wait(async () => (await tileNames()).length === 1, 5000);
+  assert.deepEqual(await tileNames(), ["Bravo TV"]);
+  await $(`.tile[title="${sites.bravo}deep/page"] .icon.plate img`);
 });

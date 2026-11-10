@@ -17,5 +17,6 @@
     "default_title": "Siderail",
     "default_panel": "sidebar/sidebar.html",
     "default_icon": "icons/siderail.svg"
-  }
+  },
+  "options_ui": { "page": "options/options.html", "open_in_tab": true }
 }

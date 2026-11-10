@@ -1,0 +1,47 @@
+/* Colours and controls shared by the sidebar and the options page. */
+:root {
+  color-scheme: light dark;
+  --bg: #f9f9fb;
+  --tile: #ebebef;
+  --tile-hover: #e0e0e6;
+  --text: #15141a;
+  --muted: #5b5b66;
+  --line: #d7d7db;
+  --accent: #0061e0;
+  --active: #dbe6fb;
+  --field: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #2b2a33;
+    --tile: #36353f;
+    --tile-hover: #42414d;
+    --text: #fbfbfe;
+    --muted: #9a99a6;
+    --line: #3a3944;
+    --accent: #7aa2ff;
+    --active: #3b4a6b;
+    --field: #1c1b22;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.25 system-ui, sans-serif;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--tile);
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+button:hover { background: var(--tile-hover); }
+/* A button that looks like a link. */
+button.link, button.link:hover { padding: 0; background: none; color: var(--accent); }

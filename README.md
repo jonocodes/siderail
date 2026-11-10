@@ -22,6 +22,7 @@ It started as a launcher for a living-room PC, but nothing in it is TV-specific:
 - **Open a site:** click its button to load it in the current tab. Ctrl-, Shift- or middle-click opens it in a new tab.
 - **Edit, reorder or remove:** right-click a button. Reorder one step at a time, or straight to the top or bottom. **Undo** under the buttons brings back a site you removed by mistake.
 - **Icons:** in the editor, pick any of the icons found, the letter, or **Upload…**. You can also paste or drop an image onto the editor. **Light background behind the icon** puts a white square behind dark logos; Siderail ticks it automatically for mostly-black icons on transparency.
+- **Back up or move your list:** Siderail's options (in `about:addons`, or **Import a backup** in the empty sidebar) export your list to a file, icons included, and import one back. Importing adds to your list; a site you already have is replaced, not duplicated.
 
 ### Permissions
 
@@ -54,17 +55,20 @@ GitHub Actions runs `just check` on every pull request and push to `main` (`.git
 
 - `extension/manifest.json`: Manifest V3, Firefox 142+.
 - `extension/sidebar/`: the sidebar page. `sidebar.js` is the UI: the button list, the right-click menu, the editor and icon discovery, which needs the browser.
+- `extension/options/`: the options page, with export and import.
+- `extension/storage.js`: loading and saving the list, shared by both pages. `theme.css` is their shared colours and buttons.
 - `extension/lib/`: pure logic with no browser APIs, all unit-tested:
   - `match.js`: which saved site a tab address belongs to (same host, longest path prefix; or the only site on that host, so a site saved at a deep page still lights up elsewhere on it).
   - `icons.js`: collecting icon candidates from `<link>` tags and the manifest, then ranking them. Icons under 64px are dropped. Every icon is stored at 192px, so anything 180px or over counts as equally sharp and the kind of icon decides: plain over maskable, then manifest, Apple touch icon, other `<link>` icons.
   - `names.js`: suggesting a name (manifest, then meta tags, then the page title, then the host) and a home address.
-  - `sites.js`: list operations (add or replace, remove, move a step or to a position).
+  - `sites.js`: list operations (add or replace, remove, move a step or to a position, merge an import).
+  - `backup.js`: the backup file, and checking an imported one: icons must be PNG or SVG data, addresses http or https.
   - `letter.js`, `plate.js`: the letter fallback and the "needs a light background" check.
 
 ### Tests
 
 - `test/unit/`: `node --test` against `extension/lib/`.
-- `test/e2e/`: Selenium and geckodriver drive the built add-on in headless Firefox against two local fixture sites (`fixtures.js`). One has a manifest and an Apple touch icon; the other has only a 16px favicon, a deep page, and a page that sends the add-on's own request to a sign-in page on the other site. They cover adding sites, the icon ranking, the letter fallback, uploading a dark logo, the highlight (including for a site saved at a deep page), opening a site here or in a new tab, editing, reordering, removing and undoing, and not asking for access on pages that aren't websites. They run in order in one browser, each starting from the sites the previous ones left.
+- `test/e2e/`: Selenium and geckodriver drive the built add-on in headless Firefox against two local fixture sites (`fixtures.js`). One has a manifest and an Apple touch icon; the other has only a 16px favicon, a deep page, and a page that sends the add-on's own request to a sign-in page on the other site. They cover adding sites, the icon ranking, the letter fallback, uploading a dark logo, the highlight (including for a site saved at a deep page), opening a site here or in a new tab, editing, reordering, removing and undoing, not asking for access on pages that aren't websites, and exporting the list and importing it back from the options page. They run in order in one browser, each starting from the sites the previous ones left.
   - WebDriver can't reach the real sidebar panel, so the tests open the same page in a tab. There, buttons load into the tab used before it (`targetTab()` in `sidebar.js`).
   - Firefox won't let WebDriver navigate a tab to an extension page, so the test opens it from Firefox's privileged context, which needs geckodriver's `--allow-system-access`.
   - A pref pins the add-on's internal UUID, so its page has a known address.

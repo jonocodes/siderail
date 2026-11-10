@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeSite, upsert, remove, move, moveTo } from "../../extension/lib/sites.js";
+import { makeSite, upsert, remove, move, moveTo, merge } from "../../extension/lib/sites.js";
 
 const a = { id: "a", name: "A", url: "https://a.test/" };
 const b = { id: "b", name: "B", url: "https://b.test/" };
@@ -47,4 +47,14 @@ test("helpers never mutate their input", () => {
   remove(list, "a");
   upsert(list, { ...a, name: "x" });
   assert.deepEqual(list, [a, b, c]);
+});
+
+test("merge replaces sites with the same id or address and appends the rest", () => {
+  const sameId = { ...a, name: "A2" };
+  const sameUrl = { id: "other", name: "B2", url: b.url };
+  const d = { id: "d", name: "D", url: "https://d.test/" };
+  const { sites, added, replaced } = merge([a, b, c], [sameId, sameUrl, d]);
+  assert.deepEqual(sites, [sameId, { ...sameUrl, id: "b" }, c, d]);
+  assert.equal(added, 1);
+  assert.equal(replaced, 2);
 });

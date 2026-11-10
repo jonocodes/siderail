@@ -10,7 +10,6 @@ const XPI = new URL("../../dist/siderail.xpi", import.meta.url).pathname;
 const ADDON_ID = "siderail@jonocodes";
 // Pinning the extension's internal UUID gives its pages a known address.
 const UUID = "5e0b1a8c-7d2f-4b61-9a3e-51de0a11c0de";
-const SIDEBAR = `moz-extension://${UUID}/sidebar/sidebar.html`;
 const which = (cmd) => execFileSync("which", [cmd]).toString().trim();
 
 // Returns the driver and the two window handles: siteTab (where sites load)
@@ -33,13 +32,21 @@ export async function launch({ firstUrl, prefs = {} } = {}) {
   await driver.installAddon(XPI, true);
   const siteTab = await driver.getWindowHandle();
   if (firstUrl) await driver.get(firstUrl);
+  const railTab = await openPage(driver, "sidebar/sidebar.html");
+  return { driver, siteTab, railTab };
+}
+
+// Opens one of the extension's pages in a new tab, selects it and returns
+// its window handle.
+export async function openPage(driver, path) {
+  const before = await driver.getAllWindowHandles();
   await driver.setContext(firefox.Context.CHROME);
   await driver.executeScript(
     "gBrowser.selectedTab = gBrowser.addTab(arguments[0], { triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal() });",
-    SIDEBAR,
+    `moz-extension://${UUID}/${path}`,
   );
   await driver.setContext(firefox.Context.CONTENT);
-  const railTab = (await driver.getAllWindowHandles()).find((h) => h !== siteTab);
-  await driver.switchTo().window(railTab);
-  return { driver, siteTab, railTab };
+  const tab = (await driver.getAllWindowHandles()).find((h) => !before.includes(h));
+  await driver.switchTo().window(tab);
+  return tab;
 }

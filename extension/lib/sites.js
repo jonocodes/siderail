@@ -34,3 +34,23 @@ export function moveTo(sites, id, to) {
   if (from === -1 || to < 0 || to >= sites.length) return sites;
   return sites.toSpliced(from, 1).toSpliced(to, 0, sites[from]);
 }
+
+// Adds imported sites to the list: each replaces a saved site with the same
+// id or address (keeping the saved id), and the rest go on the end. Returns
+// the new list and how many were added and replaced.
+export function merge(sites, incoming) {
+  let out = sites;
+  let added = 0;
+  let replaced = 0;
+  for (const site of incoming) {
+    const i = out.findIndex((s) => s.id === site.id || s.url === site.url);
+    if (i === -1) {
+      out = [...out, site];
+      added++;
+    } else {
+      out = out.with(i, { ...site, id: out[i].id });
+      replaced++;
+    }
+  }
+  return { sites: out, added, replaced };
+}
