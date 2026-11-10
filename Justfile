@@ -34,7 +34,33 @@ e2e: build
 # Everything CI would run.
 check: lint test e2e
 
-# Regenerate the README screenshots from docs/screenshots.json (needs internet
-# for the icons). `just screenshots editor` redoes only matching shots.
+# Needs internet for the icons. `just screenshots editor` redoes only the
+# shots whose file name contains "editor".
+[doc("Regenerate the README screenshots from docs/screenshots.json")]
 screenshots *shot: build
     node scripts/screenshots.js {{shot}}
+
+# Sets the version in the manifest, runs every check, commits and makes an
+# annotated tag whose message is the release notes. Nothing is pushed;
+# pushing the tag makes CI submit it to addons.mozilla.org.
+[doc("Prepare a release: just release 1.2.3 \"What changed\"")]
+release version $notes:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    [[ "{{version}}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "The version must look like 1.2.3." >&2; exit 1; }
+    [[ -z "$(git status --porcelain)" ]] || { echo "Commit or stash your changes first." >&2; exit 1; }
+    ! git rev-parse -q --verify "refs/tags/v{{version}}" >/dev/null || { echo "v{{version}} is already tagged." >&2; exit 1; }
+    sed -i -E 's/^(  "version": )"[^"]*"/\1"{{version}}"/' extension/manifest.json
+    [[ "$(node -p 'require("./extension/manifest.json").version')" == "{{version}}" ]]
+    just check
+    git diff --quiet || git commit -qam "Release v{{version}}"
+    git tag -a "v{{version}}" -m "$notes"
+    echo "Tagged v{{version}}. To publish: git push origin main v{{version}}"
+
+# The listing text comes from release/amo-metadata.json and is sent with
+# every version. Needs WEB_EXT_API_KEY and WEB_EXT_API_SECRET.
+[doc("Submit to addons.mozilla.org for review (CI does this for each v* tag)")]
+amo-submit $notes="":
+    mkdir -p dist
+    node -e 'const m = require("./release/amo-metadata.json"); if (process.env.notes) m.version.release_notes = { "en-US": process.env.notes }; console.log(JSON.stringify(m, null, 2))' > dist/amo-metadata.json
+    npx web-ext sign -s extension -a dist --channel listed --approval-timeout 0 --amo-metadata dist/amo-metadata.json

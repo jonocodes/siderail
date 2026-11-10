@@ -83,6 +83,19 @@ GitHub Actions runs `just check` on every pull request and push to `main` (`.git
 - **How:** `scripts/screenshots.js` reuses the e2e setup (`test/e2e/browser.js`) and sends all of Firefox's traffic through a local proxy that serves a stand-in page for each site, so no real site is visited. Each stand-in's manifest offers the scene's icon, and every site is added through the real **+ Add this site** editor, so icon sizing and the light background are decided by the add-on itself. HSTS preloading and https upgrades are turned off for this.
 - Output is byte-identical between runs on the same machine; fonts come from the system, so another machine may differ slightly.
 
+### Releasing
+
+Siderail is published as a listed add-on on addons.mozilla.org (AMO), which signs it and updates it in everyone's Firefox.
+
+1. `just release 1.2.3 "What changed"` sets the version in `extension/manifest.json` (the only place it's kept), runs `just check`, commits, and tags `v1.2.3` with the notes as the tag's message. It pushes nothing.
+2. `git push origin main v1.2.3`. The `release` workflow (`.github/workflows/release.yml`) checks the tag matches the manifest, runs `just check` again, submits the version to AMO for review (`just amo-submit`), and makes a GitHub release with the notes and the unsigned build.
+3. Mozilla reviews it, usually within a few days, then signs and publishes it.
+
+- **The listing text** (summary, description, category, licence, links) is in `release/amo-metadata.json` and is sent with every version, so change it there, not on the AMO website. A unit test checks it against AMO's rules.
+- **Credentials:** the workflow needs the repository secrets `AMO_API_KEY` and `AMO_API_SECRET`, the JWT issuer and secret from [AMO's API keys page](https://addons.mozilla.org/developers/addon/api/key/). To submit from your own machine, set `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET` and run `just amo-submit "notes"`.
+- **Versions** are plain `major.minor.patch`. AMO refuses a version number it has seen before, even from a failed submission, so a retry needs a new number.
+- **The licence on AMO is `GPL-3.0-only`**: AMO's list has no "or later" option. The code itself stays GPL-3.0-or-later (`LICENSE`).
+
 ## Design decisions
 
 These were settled while designing it. Revisit them only with a reason.
@@ -104,7 +117,7 @@ These were settled while designing it. Revisit them only with a reason.
 - Searching [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) for an icon, which matters most for self-hosted apps.
 - Syncing the list between computers (Firefox Sync's add-on storage is too small for icons, so it would sync the list and re-fetch icons).
 - An admin-set list through Firefox's policy file (managed storage), for kiosk and family machines.
-- Signing and publishing on addons.mozilla.org.
+- The first release on addons.mozilla.org. Everything is ready (see [Releasing](#releasing)) except the AMO account, its API secrets in GitHub, and running `just release 0.1.0`.
 
 ## License
 

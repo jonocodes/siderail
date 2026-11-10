@@ -2,3 +2,4 @@ node_modules/
 dist/
 .dev-profile/
 .flox/
+.amo-upload-uuid
