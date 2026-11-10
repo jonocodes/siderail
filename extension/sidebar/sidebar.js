@@ -1,4 +1,4 @@
-import { matchSite } from "../lib/match.js";
+import { matchSite, sameHost } from "../lib/match.js";
 import { makeSite, upsert, remove, move, moveTo } from "../lib/sites.js";
 import {
   candidatesFromLinks,
@@ -23,6 +23,8 @@ const statusLine = document.getElementById("status");
 const addButton = document.getElementById("add");
 
 let sites = [];
+// The current tab's address and the saved site it belongs to.
+let activeUrl = null;
 let activeId = null;
 // The site being added or edited, while the editor is open.
 let draft = null;
@@ -43,21 +45,27 @@ function h(tag, props = {}, ...children) {
   return el;
 }
 
-function setStatus(text) {
-  statusLine.textContent = text;
+function setStatus(...content) {
+  statusLine.replaceChildren(...content.filter(Boolean));
 }
 
 // ---- Storage
 
+// Saved alongside the list so a later change to its format can tell old
+// lists apart and migrate them. The format is described in lib/sites.js.
+const STORAGE_VERSION = 1;
+
 async function save(next) {
   sites = next;
-  await browser.storage.local.set({ sites });
+  setStatus("");
+  await browser.storage.local.set({ version: STORAGE_VERSION, sites });
   render();
 }
 
 browser.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.sites) {
     sites = changes.sites.newValue ?? [];
+    render();
     refreshActive();
   }
 });
@@ -83,10 +91,13 @@ async function openSite(site, newTab) {
   else await browser.tabs.update(tab.id, { url: site.url, active: true });
 }
 
+// Moves the highlight without rebuilding the list, which would lose keyboard
+// focus every time any tab changes address.
 async function refreshActive() {
   const tab = await targetTab();
-  activeId = tab?.url ? matchSite(sites, tab.url) : null;
-  render();
+  activeUrl = tab?.url ?? null;
+  activeId = activeUrl ? matchSite(sites, activeUrl) : null;
+  for (const el of main.querySelectorAll(".tiles .tile")) el.classList.toggle("active", el.dataset.id === activeId);
 }
 
 browser.tabs.onActivated.addListener(refreshActive);
@@ -100,6 +111,7 @@ function render() {
 
 function renderList() {
   ui = null;
+  closeMenu();
   footer.classList.remove("hidden");
   if (!sites.length) {
     main.replaceChildren(
@@ -156,7 +168,7 @@ function showMenu(e, site) {
     item("Move up", () => save(move(sites, site.id, -1)), i === 0),
     item("Move down", () => save(move(sites, site.id, 1)), i === sites.length - 1),
     item("Move to bottom", () => save(moveTo(sites, site.id, sites.length - 1)), i === sites.length - 1),
-    item("Remove", () => save(remove(sites, site.id))),
+    item("Remove", () => removeSite(site)),
   );
   document.body.append(menu);
   const box = menu.getBoundingClientRect();
@@ -180,17 +192,33 @@ document.addEventListener("keydown", (e) => {
 });
 addEventListener("blur", closeMenu);
 
+// Removing is undoable rather than confirmed up front: an uploaded icon would
+// otherwise be gone for good.
+async function removeSite(site) {
+  const index = sites.findIndex((s) => s.id === site.id);
+  await save(remove(sites, site.id));
+  const undo = () => save(moveTo(upsert(sites, site), site.id, Math.min(index, sites.length)));
+  setStatus(`Removed ${site.name}. `, h("button", { type: "button", class: "link", onclick: undo }, "Undo"));
+}
+
 // ---- Adding a site
 
 // Permission to read sites is only needed to find their icons. It must be
 // requested straight from the click: Firefox only prompts for user actions.
 const requestSiteAccess = () => browser.permissions.request({ origins: ["<all_urls>"] });
 
-addButton.addEventListener("click", () => startAdd(requestSiteAccess()));
+addButton.addEventListener("click", () => {
+  // Checked before asking, so a new tab doesn't get a permission prompt
+  // followed by "open a website first". startAdd checks again.
+  if (!isWeb(activeUrl)) return setStatus("Open a website first, then add it.");
+  startAdd(requestSiteAccess());
+});
+
+const isWeb = (url) => /^https?:/.test(url ?? "");
 
 async function startAdd(access) {
   const tab = await targetTab();
-  if (!tab?.url || !/^https?:/.test(tab.url)) {
+  if (!isWeb(tab?.url)) {
     access.catch(() => {});
     setStatus("Open a website first, then add it.");
     return;
@@ -214,7 +242,6 @@ function openEditor(site, discovery = null) {
     plate: site.plate ?? false,
     pageUrl: discovery?.pageUrl,
     choices: site.icon ? [{ icon: site.icon, plate: site.plate, label: "current" }] : [],
-    searching: false,
     // Fields the user has changed, which discovery must not overwrite.
     touched: new Set(),
   };
@@ -316,7 +343,6 @@ function renderEditor() {
     ),
   );
   updatePreview();
-  renderChoices();
   ui.name.focus();
 }
 
@@ -386,6 +412,8 @@ document.addEventListener("paste", (e) => {
 
 async function saveDraft(e) {
   e.preventDefault();
+  // A second Enter while the first save is still writing.
+  if (!draft) return;
   const d = draft;
   const name = d.name?.trim();
   let url = null;
@@ -402,26 +430,24 @@ async function saveDraft(e) {
 }
 
 async function removeDraft() {
-  const { id } = draft;
+  const site = sites.find((s) => s.id === draft?.id);
   draft = null;
-  await save(remove(sites, id));
+  if (site) await removeSite(site);
+  else render();
 }
 
 // ---- Finding icons
 
 async function discover(d, { pageUrl, tabTitle, favIconUrl, access }) {
-  d.searching = true;
   setHint("Looking for icons…");
   const granted = await access.catch(() => false);
   if (draft !== d) return;
   if (!granted) {
-    d.searching = false;
     setHint("Finding icons needs permission to read sites. You can still upload one.");
     return;
   }
   const found = await findIcons(pageUrl, { tabTitle, favIconUrl });
   if (draft !== d) return;
-  d.searching = false;
   const isNew = !d.id;
   if (isNew && !d.touched.has("name")) d.name = ui.name.value = found.name;
   if (isNew && !d.touched.has("url")) d.url = ui.url.value = found.home;
@@ -445,12 +471,15 @@ async function findIcons(pageUrl, { tabTitle, favIconUrl } = {}) {
   let base = pageUrl;
   try {
     const res = await fetchOk(pageUrl);
+    // Sent to another site, such as a sign-in page: its name and icons
+    // aren't this site's.
+    if (!sameHost(res.url, pageUrl)) throw new Error(`redirected to ${res.url}`);
     base = res.url;
     doc = new DOMParser().parseFromString(await res.text(), "text/html");
     const baseHref = doc.querySelector("base[href]")?.getAttribute("href");
     if (baseHref) base = new URL(baseHref, base).href;
   } catch {
-    // Unreadable page: fall back to the conventional icon and the tab's own.
+    // Unreadable, or another site's: fall back to the conventional icon and the tab's own.
   }
   const links = doc
     ? [...doc.querySelectorAll("link[rel][href]")].map((l) => ({
@@ -542,4 +571,5 @@ async function toChoice(blob, { svg = false, label } = {}) {
 // ---- Start
 
 ({ sites } = await browser.storage.local.get({ sites: [] }));
+render();
 await refreshActive();

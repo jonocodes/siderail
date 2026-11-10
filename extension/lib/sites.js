@@ -1,4 +1,5 @@
-// The saved list is an array of { id, name, url, icon, plate }:
+// The saved list, stored as { version: 1, sites } in storage.local, is an
+// array of { id, name, url, icon, plate }:
 //   icon  - a PNG data: URL, or null to show a letter tile
 //   plate - draw a light square behind the icon (for dark logos)
 // These helpers never mutate; each returns a new array.

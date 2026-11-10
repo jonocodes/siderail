@@ -2,6 +2,10 @@
 // so only icons at least MIN_ICON pixels across (or SVGs) are offered.
 
 export const MIN_ICON = 64;
+// Icons at least this big look sharp on the largest button (about 83 CSS
+// pixels, so 166 device pixels on a 2x screen). Pixels beyond that don't
+// show, so they shouldn't outrank a better kind of icon.
+export const SHARP_ICON = 180;
 
 // Largest dimension in a sizes attribute ("16x16 180x180" -> 180).
 // "any" (scalable) -> Infinity; missing or unparseable -> 0.
@@ -82,9 +86,10 @@ export function dedupe(candidates) {
 const SOURCE_ORDER = { manifest: 0, apple: 1, icon: 2 };
 
 // Measured candidates ({ ...candidate, width, height }) that are big enough,
-// best first: biggest, then plain over maskable, then manifest > apple > icon.
+// best first: biggest (counting SVGs and everything SHARP_ICON or over as
+// equal), then plain over maskable, then manifest > apple > icon.
 export function rankCandidates(measured) {
-  const size = (c) => (c.svg ? 512 : Math.min(c.width, c.height));
+  const size = (c) => (c.svg ? SHARP_ICON : Math.min(c.width, c.height, SHARP_ICON));
   return measured
     .filter((c) => c.svg || Math.min(c.width, c.height) >= MIN_ICON)
     .sort(

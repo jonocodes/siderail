@@ -38,6 +38,7 @@ footer { flex: none; padding: 8px; border-top: 1px solid var(--line); }
 footer.hidden { display: none; }
 #status { margin: 0 0 6px; color: var(--muted); font-size: 13px; }
 #status:empty { display: none; }
+#status .link { padding: 0; background: none; color: var(--accent); }
 
 button, .button {
   font: inherit;
@@ -97,7 +98,8 @@ button:hover { background: var(--tile-hover); }
   color: #fff;
 }
 .icon img { width: 100%; height: 100%; object-fit: contain; }
-.icon.plate { background: #fff; padding: 9%; }
+/* Padding as a share of the icon: a % would be of the button's width. */
+.icon.plate { background: #fff; padding: calc(var(--s) * 0.09); }
 
 .empty { padding: 24px 16px; color: var(--muted); text-align: center; }
 

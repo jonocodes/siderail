@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { matchSite } from "../../extension/lib/match.js";
+import { matchSite, sameHost } from "../../extension/lib/match.js";
 
 const sites = [
   { id: "plex", url: "https://app.plex.tv/" },
@@ -32,4 +32,24 @@ test("no match for other sites or non-web pages", () => {
   assert.equal(matchSite(sites, "https://netflix.com/"), null);
   assert.equal(matchSite(sites, "about:newtab"), null);
   assert.equal(matchSite(sites, "not a url"), null);
+});
+
+test("the only site on a host matches pages outside its path", () => {
+  const yt = [{ id: "yt", url: "https://www.youtube.com/feed/subscriptions" }];
+  assert.equal(matchSite(yt, "https://www.youtube.com/watch?v=x"), "yt");
+});
+
+test("with several sites on a host and none on the path, nothing matches", () => {
+  const two = [
+    { id: "docs", url: "https://example.com/docs/" },
+    { id: "blog", url: "https://example.com/blog/" },
+  ];
+  assert.equal(matchSite(two, "https://example.com/shop"), null);
+});
+
+test("sameHost ignores www., the scheme and the path, but not the port", () => {
+  assert.equal(sameHost("https://www.netflix.com/browse", "http://netflix.com/"), true);
+  assert.equal(sameHost("http://localhost:2283/", "http://localhost:8080/"), false);
+  assert.equal(sameHost("https://jf.example/", "https://auth.example/login"), false);
+  assert.equal(sameHost("about:blank", "about:blank"), false);
 });

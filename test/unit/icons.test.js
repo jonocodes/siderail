@@ -63,6 +63,7 @@ test("dedupe keeps the first of each url", () => {
 test("rankCandidates drops small icons and orders by size, then kind", () => {
   const measured = [
     { url: "fav", source: "icon", width: 32, height: 32 },
+    { url: "small-touch", source: "apple", width: 120, height: 120 },
     { url: "touch", source: "apple", width: 180, height: 180 },
     { url: "mask", source: "manifest", width: 512, height: 512, maskable: true },
     { url: "plain", source: "manifest", width: 512, height: 512 },
@@ -71,6 +72,21 @@ test("rankCandidates drops small icons and orders by size, then kind", () => {
   ];
   assert.deepEqual(
     rankCandidates(measured).map((c) => c.url),
-    ["plain", "svg", "mask", "touch", "same-size-icon"],
+    ["plain", "touch", "svg", "same-size-icon", "mask", "small-touch"],
+  );
+});
+
+test("rankCandidates doesn't let pixels beyond sharp beat a better kind of icon", () => {
+  // Every icon is stored at 192px, so a padded maskable 512 is no sharper
+  // than a plain 192, and an SVG favicon is no better than an apple touch icon.
+  const measured = [
+    { url: "favicon-svg", source: "icon", svg: true, width: 0, height: 0 },
+    { url: "mask512", source: "manifest", width: 512, height: 512, maskable: true },
+    { url: "plain192", source: "manifest", width: 192, height: 192 },
+    { url: "apple180", source: "apple", width: 180, height: 180 },
+  ];
+  assert.deepEqual(
+    rankCandidates(measured).map((c) => c.url),
+    ["plain192", "apple180", "favicon-svg", "mask512"],
   );
 });
