@@ -1,6 +1,7 @@
 // Two fake sites on one local server, told apart by host name:
 //   127.0.0.1  "Alpha" - a manifest with a 512px icon, a 180px apple touch
-//              icon and a 16px favicon (the 512px one should win)
+//              icon, an SVG icon without a viewBox and a 16px favicon (the
+//              512px one should win)
 //   localhost  "Bravo" - only a 16px favicon (should fall back to a letter)
 // plus a deep page on Bravo, and a page on localhost that sends the add-on's
 // request (but not the browser's) to a sign-in page on 127.0.0.1.
@@ -39,13 +40,15 @@ export function png(size, [r, g, b], { fill = 1 } = {}) {
 
 const html = (title, head) => `<!doctype html><html><head><title>${title}</title>${head}</head><body><h1>${title}</h1></body></html>`;
 
+export const SVG_LOGO = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="40" fill="#3a7"/></svg>';
+
 const SITES = {
   "127.0.0.1": {
     "/": [
       "text/html",
       html(
         "Inbox (3) - someone@example.com - Alpha",
-        '<link rel="manifest" href="/manifest.json"><link rel="apple-touch-icon" href="/touch.png"><link rel="icon" href="/fav.png" sizes="16x16">',
+        '<link rel="manifest" href="/manifest.json"><link rel="apple-touch-icon" href="/touch.png"><link rel="icon" href="/logo.svg" type="image/svg+xml"><link rel="icon" href="/fav.png" sizes="16x16">',
       ),
     ],
     "/manifest.json": [
@@ -55,6 +58,7 @@ const SITES = {
     "/icon512.png": ["image/png", png(512, [230, 60, 60])],
     "/touch.png": ["image/png", png(180, [60, 160, 230])],
     "/fav.png": ["image/png", png(16, [60, 200, 90])],
+    "/logo.svg": ["image/svg+xml", SVG_LOGO],
     "/signin": ["text/html", html("Sign in - AuthApp", '<link rel="apple-touch-icon" href="/touch.png">')],
   },
   localhost: {

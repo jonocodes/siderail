@@ -76,9 +76,9 @@ test("adds a site with its largest icon and the site's own name", async () => {
   assert.equal(await inputValue("name"), "Alpha");
   assert.equal(await inputValue("url"), sites.alpha);
   assert.equal(await pressedSize(), "512");
-  // The 512px and 180px icons are offered; the 16px favicon isn't.
+  // The 512px, 180px and SVG icons are offered; the 16px favicon isn't.
   const sizes = await Promise.all((await driver.findElements(By.css(".choice[data-size]"))).map((e) => e.getAttribute("data-size")));
-  assert.deepEqual(sizes, ["512", "180", "letter"]);
+  assert.deepEqual(sizes, ["512", "180", "svg", "letter"]);
   await (await $('button[type="submit"]')).click();
   await $(".tiles");
   assert.deepEqual(await tileNames(), ["Alpha"]);
@@ -129,6 +129,18 @@ test("an uploaded dark logo on transparency gets a light background", async () =
   await $(`.tile[title="${sites.bravo}"] .icon.plate img`);
   // The plate's padding once grew with the button's width and pushed the name out.
   assert.deepEqual(await tileNames(), ["Alpha", "Bravo"]);
+});
+
+test("an SVG icon found from the editor is kept as SVG, made to scale", async () => {
+  await menu(sites.alpha, "Edit");
+  await (await button("Find icons on the site")).click();
+  await (await $('.choice[data-size="svg"]')).click();
+  await (await $('button[type="submit"]')).click();
+  const src = await (await $(`.tile[title="${sites.alpha}"] img`)).getAttribute("src");
+  assert.match(src, /^data:image\/svg\+xml;base64,/);
+  const svg = Buffer.from(src.split(",")[1], "base64").toString();
+  assert.match(svg, /<circle /);
+  assert.match(svg, /viewBox="0 0 100 100"/);
 });
 
 test("right-click menu edits, reorders and removes, and removing can be undone", async () => {

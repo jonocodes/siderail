@@ -29,7 +29,7 @@ It started as a launcher for a living-room PC, but nothing in it is TV-specific:
 - **Storage:** your list of sites, kept on this computer.
 - **Access your data for all websites** (optional, asked the first time you add a site): only used to download the page you're adding and its icons, to find a large icon and its name. Without it you can still add sites with an uploaded icon or a letter.
 
-Icons are stored inside the add-on as images, not links, so the sidebar works offline and sites can't see when it's shown.
+Icons are stored inside the add-on as images (PNG, or SVG when the icon is one), not links, so the sidebar works offline and sites can't see when it's shown.
 
 ## Development
 
@@ -85,6 +85,7 @@ These were settled while designing it. Revisit them only with a reason.
 - **The sidebar, not tabs.** Firefox's own vertical tabs were the obvious alternative. But every site stays loaded (and keeps playing audio in the background), and the icons are small. Siderail keeps one page and swaps what's in it.
 - **One column.** A wider sidebar makes bigger buttons, not more columns.
 - **Large icons or nothing.** Scaled-up 16px favicons were mocked up and rejected as too blurry. The fallback is a letter tile, never a favicon.
+- **SVG icons stay SVG; others become 192px PNGs.** 192px covers the largest button (about 83 CSS pixels) on a 2× screen, but a TV scaled to 3× needs more, and SVGs are sharp at any size. SVGs over 100 KB (usually an embedded photo) become PNGs too, and one with a width and height but no `viewBox` gets one, so it scales.
 - **Reorder from the right-click menu, not by dragging.** The list is set up once and rarely changed, so drag to reorder isn't worth its edge cases (telling clicks from drags, links dragging out of the sidebar, flaky WebDriver tests). The menu also works from the keyboard. See [#1](https://github.com/jonocodes/siderail/issues/1).
 - **No custom layouts.** Letting users supply their own HTML, or load a dashboard site into the sidebar with its links redirected into the main tab, was considered and dropped.
 - **Firefox only.** Chrome's side panel can't reopen by itself when the browser starts, which defeats a launcher that should always be there. Chrome also only installs extensions automatically through machine-wide policy.

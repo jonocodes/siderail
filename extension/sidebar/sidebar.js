@@ -11,8 +11,11 @@ import { pickName, homeUrl } from "../lib/names.js";
 import { letterFor, colorFor } from "../lib/letter.js";
 import { suggestPlate } from "../lib/plate.js";
 
-// Icons are stored as square PNGs this many pixels across.
+// Icons are stored as square PNGs this many pixels across, except SVGs,
+// which stay SVG so they're sharp at any size, unless they're over
+// MAX_SVG_BYTES (some embed a big photo).
 const ICON_PX = 192;
+const MAX_SVG_BYTES = 100_000;
 // How many found icons to offer in the editor.
 const MAX_CHOICES = 8;
 const FETCH_TIMEOUT_MS = 8000;
@@ -538,9 +541,12 @@ async function findIcons(pageUrl, { tabTitle, favIconUrl } = {}) {
   };
 }
 
-// Draws an image into a square ICON_PX PNG, keeping its proportions.
+// Draws an image into a square ICON_PX canvas, keeping its proportions, to
+// measure it and check whether it needs a light background. The icon is the
+// SVG itself when it is one, otherwise the canvas as a PNG.
 async function toChoice(blob, { svg = false, label } = {}) {
-  if (svg && blob.type !== "image/svg+xml") blob = new Blob([blob], { type: "image/svg+xml" });
+  if (svg || blob.type === "image/svg+xml") blob = await prepareSvg(blob);
+  const isSvg = blob.type === "image/svg+xml";
   const src = URL.createObjectURL(blob);
   try {
     const img = new Image();
@@ -556,16 +562,39 @@ async function toChoice(blob, { svg = false, label } = {}) {
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, (ICON_PX - w * scale) / 2, (ICON_PX - ht * scale) / 2, w * scale, ht * scale);
     return {
-      icon: canvas.toDataURL("image/png"),
+      icon: isSvg && blob.size <= MAX_SVG_BYTES ? await dataUrl(blob) : canvas.toDataURL("image/png"),
       plate: suggestPlate(ctx.getImageData(0, 0, ICON_PX, ICON_PX).data),
       width: img.naturalWidth,
       height: img.naturalHeight,
-      svg: svg || blob.type === "image/svg+xml",
+      svg: isSvg,
       label,
     };
   } finally {
     URL.revokeObjectURL(src);
   }
+}
+
+// An SVG with a width and height but no viewBox doesn't scale: its drawing
+// stays that size however big it's shown. A viewBox makes it fill the icon.
+// Throws for files that aren't SVG, such as an HTML error page at a .svg URL.
+async function prepareSvg(blob) {
+  const doc = new DOMParser().parseFromString(await blob.text(), "image/svg+xml");
+  const root = doc.documentElement;
+  if (root.namespaceURI !== "http://www.w3.org/2000/svg" || root.localName !== "svg") throw new Error("not an SVG");
+  // Only plain lengths: "100%" or "2em" can't become a viewBox.
+  const size = (attr) => +(root.getAttribute(attr)?.match(/^\s*([\d.]+)(px)?\s*$/)?.[1] ?? 0);
+  const [w, h] = [size("width"), size("height")];
+  if (!root.hasAttribute("viewBox") && w > 0 && h > 0) root.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  return new Blob([new XMLSerializer().serializeToString(doc)], { type: "image/svg+xml" });
+}
+
+function dataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 }
 
 // ---- Start
