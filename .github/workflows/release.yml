@@ -46,6 +46,6 @@ jobs:
           {
             git tag -l --format='%(contents)' "$GITHUB_REF_NAME"
             echo
-            echo "Install it from addons.mozilla.org once Mozilla has reviewed this version. The attached build is unsigned: Firefox only loads it temporarily (about:debugging) or in Developer Edition and Nightly."
+            echo "Install it from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/siderail/) once Mozilla has reviewed this version. The attached build is unsigned: Firefox only loads it temporarily (about:debugging) or in Developer Edition and Nightly."
           } > dist/notes.md
           gh release create "$GITHUB_REF_NAME" "$xpi" --title "$GITHUB_REF_NAME" --notes-file dist/notes.md

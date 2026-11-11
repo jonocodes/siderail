@@ -6,6 +6,8 @@ A Firefox add-on that shows your chosen sites as big buttons in the sidebar. Cli
 - Large icons only. Small favicons look blurry on a big button, so Siderail finds a site's large icons (its web app manifest, Apple touch icon, SVG icon), or you upload one, or it shows a coloured letter.
 - The button for the site in the current tab is highlighted.
 
+Install it from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/siderail/) (the first version, 0.1.0, is in Mozilla's review).
+
 It started as a launcher for a living-room PC, but nothing in it is TV-specific: it works just as well as a simple console for someone who only needs a few sites.
 
 <p>
@@ -116,7 +118,6 @@ These were settled while designing it. Revisit them only with a reason.
 - Searching [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) for an icon, which matters most for self-hosted apps.
 - Syncing the list between computers (Firefox Sync's add-on storage is too small for icons, so it would sync the list and re-fetch icons).
 - An admin-set list through Firefox's policy file (managed storage), for kiosk and family machines.
-- The first release on addons.mozilla.org. Everything is ready (see [Releasing](#releasing)) except the AMO account, its API secrets in GitHub, and running `just release 0.1.0`.
 
 ## License
 

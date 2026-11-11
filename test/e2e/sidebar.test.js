@@ -30,7 +30,10 @@ after(async () => {
   await sites?.close();
 });
 
-const $ = (css) => driver.wait(until.elementLocated(By.css(css)), 5000);
+// Steps take well under a second, but a busy CI runner has been seen 5x
+// slower, so waits are generous; they only cost time when a test fails.
+const WAIT = 15_000;
+const $ = (css) => driver.wait(until.elementLocated(By.css(css)), WAIT);
 const tileNames = async () =>
   Promise.all((await driver.findElements(By.css(".tile:not(.preview) .name"))).map((e) => e.getText()));
 const activeName = async () => (await $(".tile.active .name")).getText();
@@ -50,7 +53,7 @@ async function goTo(url) {
 async function addCurrentSite() {
   await (await $("#add")).click();
   await $(".editor");
-  await driver.wait(async () => (await (await $(".editor .hint")).getText()) !== "Looking for icons…", 10000);
+  await driver.wait(async () => (await (await $(".editor .hint")).getText()) !== "Looking for icons…", 2 * WAIT);
 }
 
 // Right-clicks the button whose address is `url` and picks `label` from the menu.
@@ -70,7 +73,7 @@ test("starts empty", async () => {
 test("on a page that isn't a website, adding says so without asking for access", async () => {
   await goTo("about:blank");
   await (await $("#add")).click();
-  await driver.wait(async () => (await (await $("#status")).getText()).includes("Open a website first"), 5000);
+  await driver.wait(async () => (await (await $("#status")).getText()).includes("Open a website first"), WAIT);
   // The test profile grants permission requests silently, so a request would show here.
   assert.equal(await hasSiteAccess(), false);
   await goTo(sites.alpha);
@@ -97,7 +100,7 @@ test("falls back to a letter when a site has only a small favicon", async () => 
   assert.equal(await pressedSize(), "letter");
   assert.match(await (await $(".editor .hint")).getText(), /No large icon/);
   await (await $('button[type="submit"]')).click();
-  await driver.wait(async () => (await tileNames()).length === 2, 5000);
+  await driver.wait(async () => (await tileNames()).length === 2, WAIT);
   assert.deepEqual(await tileNames(), ["Alpha", "Bravo"]);
   assert.equal(await activeName(), "Bravo");
 });
@@ -105,18 +108,18 @@ test("falls back to a letter when a site has only a small favicon", async () => 
 test("clicking a button loads the site in the other tab", async () => {
   await (await $(".tile:not(.active)")).click();
   await driver.switchTo().window(siteTab);
-  await driver.wait(until.urlIs(sites.alpha), 5000);
+  await driver.wait(until.urlIs(sites.alpha), WAIT);
   await driver.switchTo().window(railTab);
-  await driver.wait(async () => (await activeName()) === "Alpha", 5000);
+  await driver.wait(async () => (await activeName()) === "Alpha", WAIT);
 });
 
 test("ctrl-click opens the site in a new tab", async () => {
   const before = await driver.getAllWindowHandles();
   await driver.actions().keyDown(Key.CONTROL).click(await $(".tile:not(.active)")).keyUp(Key.CONTROL).perform();
-  await driver.wait(async () => (await driver.getAllWindowHandles()).length === before.length + 1, 5000);
+  await driver.wait(async () => (await driver.getAllWindowHandles()).length === before.length + 1, WAIT);
   const opened = (await driver.getAllWindowHandles()).find((h) => !before.includes(h));
   await driver.switchTo().window(opened);
-  await driver.wait(until.urlIs(sites.bravo), 5000);
+  await driver.wait(until.urlIs(sites.bravo), WAIT);
   await driver.close();
   await driver.switchTo().window(siteTab);
   assert.equal(await driver.getCurrentUrl(), sites.alpha);
@@ -128,7 +131,7 @@ test("an uploaded dark logo on transparency gets a light background", async () =
   await writeFile(file, png(256, [20, 20, 20], { fill: 0.6 }));
   await menu(sites.bravo, "Edit");
   await (await $('input[type="file"]')).sendKeys(file);
-  await driver.wait(async () => (await pressedSize()) === "256", 5000);
+  await driver.wait(async () => (await pressedSize()) === "256", WAIT);
   assert.equal(await (await $('input[name="plate"]')).isSelected(), true);
   await (await $('button[type="submit"]')).click();
   await $(`.tile[title="${sites.bravo}"] .icon.plate img`);
@@ -160,26 +163,26 @@ test("right-click menu edits, reorders and removes, and removing can be undone",
   await name.clear();
   await name.sendKeys("Bravo TV");
   await (await $('button[type="submit"]')).click();
-  await driver.wait(async () => (await tileNames()).includes("Bravo TV"), 5000);
+  await driver.wait(async () => (await tileNames()).includes("Bravo TV"), WAIT);
 
   await menu(sites.bravo, "Move up");
-  await driver.wait(async () => (await tileNames())[0] === "Bravo TV", 5000);
+  await driver.wait(async () => (await tileNames())[0] === "Bravo TV", WAIT);
 
   await menu(sites.bravo, "Move to bottom");
-  await driver.wait(async () => (await tileNames())[1] === "Bravo TV", 5000);
+  await driver.wait(async () => (await tileNames())[1] === "Bravo TV", WAIT);
 
   await menu(sites.bravo, "Move to top");
-  await driver.wait(async () => (await tileNames())[0] === "Bravo TV", 5000);
+  await driver.wait(async () => (await tileNames())[0] === "Bravo TV", WAIT);
 
   // Undo puts it back where it was, not at the end.
   await menu(sites.bravo, "Remove");
-  await driver.wait(async () => (await tileNames()).length === 1, 5000);
+  await driver.wait(async () => (await tileNames()).length === 1, WAIT);
   await (await $("#status")).findElement(By.xpath(`./button[.="Undo"]`)).click();
-  await driver.wait(async () => (await tileNames()).length === 2, 5000);
+  await driver.wait(async () => (await tileNames()).length === 2, WAIT);
   assert.deepEqual(await tileNames(), ["Bravo TV", "Alpha"]);
 
   await menu(sites.alpha, "Remove");
-  await driver.wait(async () => (await tileNames()).length === 1, 5000);
+  await driver.wait(async () => (await tileNames()).length === 1, WAIT);
   assert.deepEqual(await tileNames(), ["Bravo TV"]);
 });
 
@@ -199,7 +202,7 @@ test("a site saved at a deep page stays highlighted elsewhere on its host", asyn
   await (await $('button[type="submit"]')).click();
   await $(`.tile[title="${deep}"]`);
   await goTo(sites.bravo);
-  await driver.wait(async () => (await activeName()) === "Bravo TV", 5000);
+  await driver.wait(async () => (await activeName()) === "Bravo TV", WAIT);
 });
 
 test("a page that sends the add-on to a sign-in page elsewhere keeps its own name and address", async () => {
@@ -221,7 +224,7 @@ test("exports the list, icons included, and imports it back", async () => {
   await driver.wait(async () => {
     file = (await readdir(downloads)).find((f) => /^siderail-[\d-]+\.json$/.test(f));
     return file && (await readFile(join(downloads, file), "utf8")).endsWith("}");
-  }, 5000);
+  }, WAIT);
   const exported = JSON.parse(await readFile(join(downloads, file), "utf8"));
   assert.equal(exported.format, "siderail");
   assert.deepEqual(exported.sites.map((s) => [s.name, s.plate]), [["Bravo TV", true]]);
@@ -235,14 +238,14 @@ test("exports the list, icons included, and imports it back", async () => {
   await $(".empty");
   const before = await driver.getAllWindowHandles();
   await (await $(".empty button.link")).click();
-  await driver.wait(async () => (await driver.getAllWindowHandles()).length > before.length, 5000);
+  await driver.wait(async () => (await driver.getAllWindowHandles()).length > before.length, WAIT);
   const importTab = (await driver.getAllWindowHandles()).find((h) => !before.includes(h));
   await driver.switchTo().window(importTab);
-  await driver.wait(until.urlContains("options/options.html"), 5000);
+  await driver.wait(until.urlContains("options/options.html"), WAIT);
 
   const importFile = async (path) => {
     await (await $("#file")).sendKeys(path);
-    await driver.wait(async () => (await (await $("#status")).getText()) !== "", 5000);
+    await driver.wait(async () => (await (await $("#status")).getText()) !== "", WAIT);
     const text = await (await $("#status")).getText();
     await driver.executeScript("document.getElementById('status').textContent = '';");
     return text;
@@ -256,7 +259,7 @@ test("exports the list, icons included, and imports it back", async () => {
   await driver.close();
 
   await driver.switchTo().window(railTab);
-  await driver.wait(async () => (await tileNames()).length === 1, 5000);
+  await driver.wait(async () => (await tileNames()).length === 1, WAIT);
   assert.deepEqual(await tileNames(), ["Bravo TV"]);
   await $(`.tile[title="${sites.bravo}deep/page"] .icon.plate img`);
 });
