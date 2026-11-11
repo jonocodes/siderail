@@ -23,6 +23,7 @@ before(async () => {
     firstUrl: sites.alpha,
     prefs: { "browser.download.folderList": 2, "browser.download.dir": downloads, "browser.download.useDownloadDir": true },
   }));
+  await useDashboardIcons(sites.dashboardIcons);
 });
 
 after(async () => {
@@ -61,6 +62,20 @@ async function menu(url, label) {
   await driver.actions().contextClick(await $(`.tile[title="${url}"]`)).perform();
   await (await $(".menu")).findElement(By.xpath(`./button[.="${label}"]`)).click();
 }
+
+// Points the add-on at a copy of dashboard-icons instead of jsDelivr.
+async function useDashboardIcons(base) {
+  await driver.executeAsyncScript("browser.storage.local.set({ dashboardIconsBase: arguments[0] }).then(arguments[1]);", base);
+}
+
+const pressedTitle = () => $('.choice[aria-pressed="true"]').then((e) => e.getAttribute("title")).catch(() => null);
+const resultTitles = async () =>
+  Promise.all((await driver.findElements(By.css(".results button"))).map((e) => e.getAttribute("title"))).catch(() => null);
+const svgOf = async (url) => {
+  const src = await (await $(`.tile[title="${url}"] img`)).getAttribute("src");
+  assert.match(src, /^data:image\/svg\+xml;base64,/);
+  return Buffer.from(src.split(",")[1], "base64").toString();
+};
 
 async function hasSiteAccess() {
   return driver.executeAsyncScript("browser.permissions.contains({ origins: ['<all_urls>'] }).then(arguments[0]);");
@@ -262,4 +277,92 @@ test("exports the list, icons included, and imports it back", async () => {
   await driver.wait(async () => (await tileNames()).length === 1, WAIT);
   assert.deepEqual(await tileNames(), ["Bravo TV"]);
   await $(`.tile[title="${sites.bravo}deep/page"] .icon.plate img`);
+});
+
+test("a self-hosted app without a large icon gets its icon from dashboard-icons", async () => {
+  const jellyfin = `${sites.bravo}jellyfin/`;
+  await goTo(jellyfin);
+  await addCurrentSite();
+  assert.equal(await inputValue("name"), "Jellyfin");
+  assert.equal(await inputValue("url"), jellyfin);
+  assert.equal(await pressedTitle(), "jellyfin from dashboard-icons");
+  assert.match(await (await $(".editor .hint")).getText(), /No large icon found on this site, so this one is jellyfin from dashboard-icons/);
+  await (await $('button[type="submit"]')).click();
+  await driver.wait(async () => (await tileNames()).length === 2, 5000);
+  assert.match(await svgOf(jellyfin), /class="jellyfin"/);
+});
+
+test("an app's own icon still comes before dashboard-icons'", async () => {
+  await goTo(`${sites.alpha}sonarr/`);
+  await addCurrentSite();
+  assert.equal(await inputValue("name"), "Sonarr");
+  assert.equal(await pressedSize(), "180");
+  const titles = await Promise.all((await driver.findElements(By.css(".choice[data-size]"))).map((e) => e.getAttribute("title")));
+  assert.deepEqual(titles, ["180×180", "sonarr from dashboard-icons", "Letter"]);
+  await (await button("Cancel")).click();
+});
+
+test("searches dashboard-icons from the editor, without permission to read sites", async () => {
+  await driver.executeAsyncScript("browser.permissions.remove({ origins: ['<all_urls>'] }).then(arguments[0]);");
+  assert.equal(await hasSiteAccess(), false);
+  const jellyfin = `${sites.bravo}jellyfin/`;
+  await menu(jellyfin, "Edit");
+
+  // It starts from the site's name.
+  await (await button("Search…")).click();
+  const search = await $('input[name="icon-search"]');
+  assert.equal(await search.getAttribute("value"), "Jellyfin");
+  await driver.wait(async () => (await resultTitles())?.[0] === "jellyfin", 5000);
+
+  // Light and dark variants are offered; the arrow keys move between results.
+  await search.clear();
+  await search.sendKeys("PLEX");
+  await driver.wait(async () => (await resultTitles())?.join() === "plex,plex-light", 5000);
+  await search.sendKeys(Key.ARROW_DOWN);
+  await driver.switchTo().activeElement().sendKeys(Key.ARROW_RIGHT);
+  assert.equal(await driver.switchTo().activeElement().getAttribute("title"), "plex-light");
+  await driver.switchTo().activeElement().sendKeys(Key.ENTER);
+  await driver.wait(async () => (await pressedTitle()) === "plex-light from dashboard-icons", 5000);
+  assert.equal(await (await $(".search")).isDisplayed(), false);
+
+  // Aliases count. Enter in the search box picks the first result rather
+  // than saving; this icon only comes as a PNG.
+  await (await button("Search…")).click();
+  await search.clear();
+  await search.sendKeys("usenet");
+  await driver.wait(async () => (await resultTitles())?.join() === "nzb-get", 5000);
+  await search.sendKeys(Key.ENTER);
+  await driver.wait(async () => (await pressedSize()) === "128", 5000);
+  await $(".editor");
+
+  // Listed as SVG, but there's only a PNG: that's used instead.
+  await (await button("Search…")).click();
+  await search.clear();
+  await search.sendKeys("kodi");
+  await driver.wait(async () => (await resultTitles())?.join() === "kodi", 5000);
+  await (await $('.results button[title="kodi"]')).click();
+  await driver.wait(async () => (await pressedSize()) === "96", 5000);
+
+  // Escape closes the search, not the editor.
+  await (await button("Search…")).click();
+  await search.sendKeys(Key.ESCAPE);
+  assert.equal(await (await $(".search")).isDisplayed(), false);
+  await (await $('.choice[title="plex-light from dashboard-icons"]')).click();
+  await (await $('button[type="submit"]')).click();
+  await $(".tiles");
+  assert.match(await svgOf(jellyfin), /class="plex-light"/);
+});
+
+test("says so when dashboard-icons can't be reached", async () => {
+  await useDashboardIcons(`${sites.dashboardIcons}gone/`);
+  // The list is kept while the page is open.
+  await driver.executeScript("location.reload()");
+  await $(".tiles");
+  await menu(`${sites.bravo}jellyfin/`, "Edit");
+  await (await button("Search…")).click();
+  await driver.wait(async () => /Couldn't reach dashboard-icons/.test(await (await $(".editor .hint")).getText()), 5000);
+  // The rest of the editor still works.
+  await (await button("Cancel")).click();
+  await $(".tiles");
+  await useDashboardIcons(sites.dashboardIcons);
 });

@@ -10,6 +10,7 @@ import {
 import { pickName, homeUrl } from "../lib/names.js";
 import { letterFor, colorFor } from "../lib/letter.js";
 import { suggestPlate } from "../lib/plate.js";
+import { indexFrom, search, guess, iconUrls } from "../lib/dashboard.js";
 import { loadSites, saveSites } from "../storage.js";
 
 // Icons are stored as square PNGs this many pixels across, except SVGs,
@@ -20,6 +21,13 @@ const MAX_SVG_BYTES = 100_000;
 // How many found icons to offer in the editor.
 const MAX_CHOICES = 8;
 const FETCH_TIMEOUT_MS = 8000;
+// dashboard-icons, as jsDelivr serves its GitHub repo. The main branch, so
+// new apps turn up without a new Siderail. The e2e tests point
+// "dashboardIconsBase" in storage at a local copy.
+const DASHBOARD_ICONS = "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons@main/";
+// Its list of icons is about 1.3 MB (110 kB compressed).
+const INDEX_TIMEOUT_MS = 20000;
+const MAX_RESULTS = 24;
 
 const main = document.getElementById("main");
 const footer = document.getElementById("footer");
@@ -248,6 +256,7 @@ function openEditor(site, discovery = null) {
     plate: site.plate ?? false,
     pageUrl: discovery?.pageUrl,
     choices: site.icon ? [{ icon: site.icon, plate: site.plate, label: "current" }] : [],
+    searchOpen: false,
     // Fields the user has changed, which discovery must not overwrite.
     touched: new Set(),
   };
@@ -292,6 +301,7 @@ function renderEditor() {
       onchange: (e) => e.target.files[0] && useImage(e.target.files[0], "upload"),
     }),
   };
+  renderSearch();
   const isNew = !d.id;
   main.replaceChildren(
     h(
@@ -326,6 +336,7 @@ function renderEditor() {
         ),
       h("div", { class: "label-row" }, "Icon"),
       ui.choices,
+      ui.search,
       ui.hint,
       !isNew &&
         h(
@@ -369,7 +380,13 @@ function renderChoices() {
     ...d.choices.map((c) =>
       choice(iconFor({ name: d.name, icon: c.icon, plate: c.plate }), c.icon === d.icon, pickByUser(c), {
         "data-size": c.svg ? "svg" : c.width,
-        title: c.svg ? "Scalable (SVG)" : c.width ? `${c.width}×${c.height}` : c.label,
+        title: c.from
+          ? `${c.from} from dashboard-icons`
+          : c.svg
+            ? "Scalable (SVG)"
+            : c.width
+              ? `${c.width}×${c.height}`
+              : c.label,
       }),
     ),
     choice(iconFor({ name: d.name, icon: null }), d.icon === null, pickByUser(null), {
@@ -377,6 +394,11 @@ function renderChoices() {
       title: "Letter",
     }),
     choice(h("span", { class: "label" }, "Upload…"), false, () => ui.file.click(), { "aria-pressed": null }),
+    choice(h("span", { class: "label" }, "Search…"), false, () => (d.searchOpen ? closeSearch() : openSearch()), {
+      "aria-pressed": null,
+      "aria-expanded": String(d.searchOpen),
+      title: "Search dashboard-icons",
+    }),
   );
 }
 
@@ -444,24 +466,33 @@ async function removeDraft() {
 
 // ---- Finding icons
 
+// The site's own icons, then dashboard-icons' icon for the app if its name
+// or host is one there. That one never beats an icon the site has.
 async function discover(d, { pageUrl, tabTitle, favIconUrl, access }) {
   setHint("Looking for icons…");
+  // Doesn't need permission to read sites, so it starts straight away.
+  const icons = dashboardIcons().catch(() => null);
   const granted = await access.catch(() => false);
   if (draft !== d) return;
-  if (!granted) {
-    setHint("Finding icons needs permission to read sites. You can still upload one.");
-    return;
-  }
-  const found = await findIcons(pageUrl, { tabTitle, favIconUrl });
-  if (draft !== d) return;
   const isNew = !d.id;
-  if (isNew && !d.touched.has("name")) d.name = ui.name.value = found.name;
-  if (isNew && !d.touched.has("url")) d.url = ui.url.value = found.home;
+  let found = { choices: [] };
+  if (granted) {
+    found = await findIcons(pageUrl, { tabTitle, favIconUrl });
+    if (draft !== d) return;
+    if (isNew && !d.touched.has("name")) d.name = ui.name.value = found.name;
+    if (isNew && !d.touched.has("url")) d.url = ui.url.value = found.home;
+  }
+  const guessed = await guessIcon(await icons, d);
+  if (draft !== d) return;
   const known = new Set(d.choices.map((c) => c.icon));
-  d.choices.push(...found.choices.filter((c) => !known.has(c.icon)));
-  if (isNew && !d.touched.has("icon") && found.choices[0]) pick(found.choices[0]);
+  d.choices.push(...[...found.choices, guessed].filter((c) => c && !known.has(c.icon)));
+  const best = found.choices[0] ?? guessed;
+  if (isNew && !d.touched.has("icon") && best) pick(best);
   else updatePreview();
-  setHint(found.choices.length ? "" : "No large icon found on this site. Upload one, or keep the letter.");
+  if (!granted) setHint("Finding the site's own icons needs permission to read sites. You can still search for one or upload one.");
+  else if (found.choices.length) setHint("");
+  else if (guessed) setHint(`No large icon found on this site, so this one is ${guessed.from} from dashboard-icons.`);
+  else setHint("No large icon found on this site. Search for one, upload one, or keep the letter.");
 }
 
 async function fetchOk(url) {
@@ -542,6 +573,160 @@ async function findIcons(pageUrl, { tabTitle, favIconUrl } = {}) {
     }),
     home: homeUrl({ manifest, manifestUrl, url: base }),
   };
+}
+
+// ---- dashboard-icons
+
+// The list of dashboard-icons, downloaded once while the sidebar is open:
+// { base, index }. A failed download is tried again next time.
+let dashboard = null;
+function dashboardIcons() {
+  dashboard ??= (async () => {
+    const { dashboardIconsBase: base } = await browser.storage.local.get({ dashboardIconsBase: DASHBOARD_ICONS });
+    const res = await fetch(`${base}metadata.json`, { credentials: "omit", signal: AbortSignal.timeout(INDEX_TIMEOUT_MS) });
+    if (!res.ok) throw new Error(`${res.status} ${res.url}`);
+    return { base, index: indexFrom(await res.json()) };
+  })().catch((e) => {
+    dashboard = null;
+    throw e;
+  });
+  return dashboard;
+}
+
+// One of its icons (or a light or dark variant) as an editor choice, as SVG
+// when it's drawn as one.
+async function dashboardChoice({ base }, entry, variant) {
+  for (const url of iconUrls(base, entry, variant)) {
+    try {
+      const res = await fetch(url, { credentials: "omit", signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+      if (!res.ok) continue;
+      return { ...(await toChoice(await res.blob(), { svg: url.endsWith(".svg") })), from: variant };
+    } catch {
+      // try the next format
+    }
+  }
+  throw new Error(`no icon for ${variant}`);
+}
+
+async function guessIcon(icons, d) {
+  const entry = icons && guess(icons.index, { name: d.name, url: d.url });
+  return entry ? dashboardChoice(icons, entry, entry.name).catch(() => null) : null;
+}
+
+// The search box and results under the icon choices, shown by "Search…".
+function renderSearch() {
+  const d = draft;
+  const input = h("input", {
+    type: "search",
+    name: "icon-search",
+    placeholder: "App name",
+    autocomplete: "off",
+    "aria-label": "Search dashboard-icons",
+    oninput: () => showResults(d),
+    onkeydown: (e) => {
+      // Enter would save the site.
+      if (e.key === "Enter") {
+        e.preventDefault();
+        results.querySelector("button")?.click();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        results.querySelector("button")?.focus();
+      }
+    },
+  });
+  const results = h("div", {
+    class: "choices results",
+    role: "group",
+    "aria-label": "dashboard-icons",
+    onkeydown: (e) => {
+      const buttons = [...results.querySelectorAll("button")];
+      const i = buttons.indexOf(document.activeElement);
+      const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (i < 0 || !step) return;
+      e.preventDefault();
+      (i + step < 0 ? input : buttons[i + step])?.focus();
+    },
+  });
+  ui.searchInput = input;
+  ui.results = results;
+  ui.search = h(
+    "div",
+    {
+      class: "search",
+      hidden: !d.searchOpen,
+      onkeydown: (e) => {
+        if (e.key !== "Escape") return;
+        // Closes the search, not the editor.
+        e.stopPropagation();
+        closeSearch();
+      },
+    },
+    input,
+    results,
+  );
+}
+
+function openSearch() {
+  draft.searchOpen = true;
+  ui.search.hidden = false;
+  if (!ui.searchInput.value) ui.searchInput.value = draft.name ?? "";
+  renderChoices();
+  ui.searchInput.focus();
+  ui.searchInput.select();
+  showResults(draft);
+}
+
+function closeSearch() {
+  draft.searchOpen = false;
+  ui.search.hidden = true;
+  renderChoices();
+  ui.choices.querySelector("[aria-expanded]").focus();
+}
+
+async function showResults(d) {
+  const query = ui.searchInput.value;
+  let icons;
+  try {
+    icons = await dashboardIcons();
+  } catch {
+    if (draft === d) setHint("Couldn't reach dashboard-icons. Check the connection and search again.");
+    return;
+  }
+  // Typed on since, or closed.
+  if (draft !== d || ui.searchInput.value !== query) return;
+  setHint("");
+  const hits = search(icons.index, query, MAX_RESULTS)
+    .flatMap((entry) => entry.variants.map((variant) => [entry, variant]))
+    .slice(0, MAX_RESULTS);
+  ui.results.replaceChildren(
+    ...hits.map(([entry, variant]) => {
+      const urls = iconUrls(icons.base, entry, variant);
+      const img = h("img", { src: urls[0], alt: "", loading: "lazy" });
+      img.addEventListener("error", () => urls.length > 1 && (img.src = urls.pop()), { once: true });
+      return h(
+        "button",
+        { type: "button", class: "choice", title: variant, onclick: () => useDashboardIcon(d, icons, entry, variant) },
+        h("span", { class: "icon" }, img),
+      );
+    }),
+  );
+  if (query.trim() && !hits.length) setHint("No icons match. Try the app's name rather than the site's.");
+}
+
+async function useDashboardIcon(d, icons, entry, variant) {
+  setHint(`Downloading ${variant}…`);
+  try {
+    const c = await dashboardChoice(icons, entry, variant);
+    if (draft !== d) return;
+    const chosen = d.choices.find((k) => k.icon === c.icon) ?? (d.choices.unshift(c), c);
+    d.touched.add("icon");
+    setHint("");
+    closeSearch();
+    pick(chosen);
+    ui.choices.querySelector('[aria-pressed="true"]').focus();
+  } catch {
+    if (draft === d) setHint(`Couldn't download ${variant} from dashboard-icons.`);
+  }
 }
 
 // Draws an image into a square ICON_PX canvas, keeping its proportions, to
