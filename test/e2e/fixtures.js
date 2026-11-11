@@ -5,6 +5,10 @@
 //   localhost  "Bravo" - only a 16px favicon (should fall back to a letter)
 // plus a deep page on Bravo, and a page on localhost that sends the add-on's
 // request (but not the browser's) to a sign-in page on 127.0.0.1.
+//
+// Two self-hosted apps that dashboard-icons knows: "Jellyfin" (localhost,
+// no icons of its own) and "Sonarr" (127.0.0.1, a 180px touch icon). And a
+// small copy of dashboard-icons itself, at `dashboardIcons`.
 import http from "node:http";
 import zlib from "node:zlib";
 
@@ -42,6 +46,30 @@ const html = (title, head) => `<!doctype html><html><head><title>${title}</title
 
 export const SVG_LOGO = '<svg xmlns="http://www.w3.org/2000/svg" width="50" height="100"><ellipse cx="25" cy="50" rx="20" ry="45" fill="#3a7"/></svg>';
 
+// Every icon in this copy of dashboard-icons is a coloured circle, with a
+// class to tell them apart.
+const circle = (name, fill) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle class="${name}" cx="5" cy="5" r="4" fill="${fill}"/></svg>`;
+const DASHBOARD_ICONS = {
+  "/dashboard-icons/metadata.json": [
+    "application/json",
+    JSON.stringify({
+      jellyfin: { base: "svg", aliases: [] },
+      sonarr: { base: "svg", aliases: [] },
+      plex: { base: "svg", aliases: ["media-server"], colors: { dark: "plex", light: "plex-light" } },
+      "nzb-get": { base: "png", aliases: ["usenet"] },
+      // Listed as SVG, but only its PNG exists.
+      kodi: { base: "svg", aliases: [] },
+    }),
+  ],
+  "/dashboard-icons/svg/jellyfin.svg": ["image/svg+xml", circle("jellyfin", "#00a4dc")],
+  "/dashboard-icons/svg/sonarr.svg": ["image/svg+xml", circle("sonarr", "#35c5f4")],
+  "/dashboard-icons/svg/plex.svg": ["image/svg+xml", circle("plex", "#e5a00d")],
+  "/dashboard-icons/svg/plex-light.svg": ["image/svg+xml", circle("plex-light", "#fff")],
+  "/dashboard-icons/png/nzb-get.png": ["image/png", png(128, [40, 160, 40])],
+  "/dashboard-icons/png/kodi.png": ["image/png", png(96, [20, 140, 220])],
+};
+
 const SITES = {
   "127.0.0.1": {
     "/": [
@@ -60,12 +88,16 @@ const SITES = {
     "/fav.png": ["image/png", png(16, [60, 200, 90])],
     "/logo.svg": ["image/svg+xml", SVG_LOGO],
     "/signin": ["text/html", html("Sign in - AuthApp", '<link rel="apple-touch-icon" href="/touch.png">')],
+    "/sonarr/": ["text/html", html("Sonarr", '<link rel="apple-touch-icon" href="/touch.png">')],
+    ...DASHBOARD_ICONS,
   },
   localhost: {
     "/": ["text/html", html("Bravo", '<link rel="icon" href="/fav.png">')],
     "/fav.png": ["image/png", png(16, [200, 200, 60])],
     "/deep/page": ["text/html", html("Deep page - Bravo", "")],
     "/bounced/": ["text/html", html("Charlie", "")],
+    "/jellyfin/": ["text/html", html("Jellyfin", '<link rel="manifest" href="/jellyfin/manifest.json">')],
+    "/jellyfin/manifest.json": ["application/manifest+json", JSON.stringify({ name: "Jellyfin", start_url: "/jellyfin/" })],
   },
 };
 
@@ -81,13 +113,16 @@ export async function startFixtures() {
     }
     const hit = SITES[host]?.[path];
     if (!hit) return res.writeHead(404).end();
-    res.writeHead(200, { "content-type": hit[0] }).end(hit[1]);
+    // Like jsDelivr, which the add-on reads without permission to read sites.
+    const cors = path.startsWith("/dashboard-icons/") ? { "access-control-allow-origin": "*" } : {};
+    res.writeHead(200, { "content-type": hit[0], ...cors }).end(hit[1]);
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address();
   return {
     alpha: `http://127.0.0.1:${port}/`,
     bravo: `http://localhost:${port}/`,
+    dashboardIcons: `http://127.0.0.1:${port}/dashboard-icons/`,
     close: () => new Promise((resolve) => server.close(resolve)),
   };
 }

@@ -3,7 +3,7 @@
 A Firefox add-on that shows your chosen sites as big buttons in the sidebar. Clicking a button loads that site in the current tab, so one window and one tab can move between sites like channels on a TV.
 
 - One column of buttons that share the sidebar's height: a handful of sites get large buttons with the icon above the name, and many sites shrink to compact rows.
-- Large icons only. Small favicons look blurry on a big button, so Siderail finds a site's large icons (its web app manifest, Apple touch icon, SVG icon), or you upload one, or it shows a coloured letter.
+- Large icons only. Small favicons look blurry on a big button, so Siderail finds a site's large icons (its web app manifest, Apple touch icon, SVG icon), or the app's icon from [dashboard-icons](https://github.com/homarr-labs/dashboard-icons), or you upload one, or it shows a coloured letter.
 - The button for the site in the current tab is highlighted.
 
 It started as a launcher for a living-room PC, but nothing in it is TV-specific: it works just as well as a simple console for someone who only needs a few sites.
@@ -21,7 +21,7 @@ It started as a launcher for a living-room PC, but nothing in it is TV-specific:
 - **Add a site:** open it, then press **+ Add this site** at the bottom of the sidebar. Siderail suggests a name, a home address and the best icon it found; change any of them, then **Save**.
 - **Open a site:** click its button to load it in the current tab. Ctrl-, Shift- or middle-click opens it in a new tab.
 - **Edit, reorder or remove:** right-click a button. Reorder one step at a time, or straight to the top or bottom. **Undo** under the buttons brings back a site you removed by mistake.
-- **Icons:** in the editor, pick any of the icons found, the letter, or **Upload…**. You can also paste or drop an image onto the editor. **Light background behind the icon** puts a white square behind dark logos; Siderail ticks it automatically for mostly-black icons on transparency.
+- **Icons:** in the editor, pick any of the icons found, the letter, **Upload…**, or **Search…** to find one in [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) by the app's name (it starts from the site's name; arrow keys and Enter work too). That matters most for self-hosted apps, which often have no large icon of their own: when the site's name or host is exactly the name of an app there (Jellyfin, `sonarr.home.lan`), its icon is offered by itself, after any icons the site has. You can also paste or drop an image onto the editor. **Light background behind the icon** puts a white square behind dark logos; Siderail ticks it automatically for mostly-black icons on transparency.
 - **Back up or move your list:** Siderail's options (in `about:addons`, or **Import a backup** in the empty sidebar) export your list to a file, icons included, and import one back. Importing adds to your list; a site you already have is replaced, not duplicated.
   [`docs/example-export.json`](docs/example-export.json) is an example: four streaming sites, two with PNG icons and two (Netflix, Disney+) with SVGs from dashboard-icons.
 
@@ -29,9 +29,11 @@ It started as a launcher for a living-room PC, but nothing in it is TV-specific:
 
 - **Tabs:** to read the current tab's address (for the highlight and for adding sites) and to load sites into it.
 - **Storage:** your list of sites, kept on this computer.
-- **Access your data for all websites** (optional, asked the first time you add a site): only used to download the page you're adding and its icons, to find a large icon and its name. Without it you can still add sites with an uploaded icon or a letter.
+- **Access your data for all websites** (optional, asked the first time you add a site): only used to download the page you're adding and its icons, to find a large icon and its name. Without it you can still add sites with an icon from dashboard-icons, an uploaded icon or a letter.
 
 Icons are stored inside the add-on as images (PNG, or SVG when the icon is one), not links, so the sidebar works offline and sites can't see when it's shown.
+
+The editor gets dashboard-icons from jsDelivr (`cdn.jsdelivr.net`), which needs no permission: the list of icons once while the sidebar is open (searching it happens in the add-on, so what you type isn't sent), the search results' pictures, and the icon you pick or the one that matches the site you're adding. It reads the repository's main branch, so new apps show up without a new Siderail, once jsDelivr's cache catches up.
 
 ## Development
 
@@ -65,11 +67,12 @@ GitHub Actions runs `just check` on every pull request and push to `main` (`.git
   - `sites.js`: list operations (add or replace, remove, move a step or to a position, merge an import).
   - `backup.js`: the backup file, and checking an imported one: icons must be PNG or SVG data, addresses http or https.
   - `letter.js`, `plate.js`: the letter fallback and the "needs a light background" check.
+  - `dashboard.js`: searching dashboard-icons' list (names first, then aliases, which are often categories), guessing a site's icon only from an exact name, and where to download each icon.
 
 ### Tests
 
 - `test/unit/`: `node --test` against `extension/lib/`.
-- `test/e2e/`: Selenium and geckodriver drive the built add-on in headless Firefox against two local fixture sites (`fixtures.js`). One has a manifest and an Apple touch icon; the other has only a 16px favicon, a deep page, and a page that sends the add-on's own request to a sign-in page on the other site. They cover adding sites, the icon ranking, the letter fallback, uploading a dark logo, the highlight (including for a site saved at a deep page), opening a site here or in a new tab, editing, reordering, removing and undoing, not asking for access on pages that aren't websites, and exporting the list and importing it back from the options page. They run in order in one browser, each starting from the sites the previous ones left.
+- `test/e2e/`: Selenium and geckodriver drive the built add-on in headless Firefox against two local fixture sites (`fixtures.js`). One has a manifest and an Apple touch icon; the other has only a 16px favicon, a deep page, and a page that sends the add-on's own request to a sign-in page on the other site. Two more pages are self-hosted apps, one with an icon of its own and one without, and the same server has a small copy of dashboard-icons, which the tests point the add-on at through `dashboardIconsBase` in its storage. They cover adding sites, the icon ranking, the letter fallback, uploading a dark logo, the highlight (including for a site saved at a deep page), opening a site here or in a new tab, editing, reordering, removing and undoing, not asking for access on pages that aren't websites, exporting the list and importing it back from the options page, and dashboard-icons: the icon guessed for an app, searching (variants, aliases, a PNG when the SVG is missing, the keyboard) without access to sites, and when it can't be reached. They run in order in one browser, each starting from the sites the previous ones left.
   - WebDriver can't reach the real sidebar panel, so the tests open the same page in a tab. There, buttons load into the tab used before it (`targetTab()` in `sidebar.js`).
   - Firefox won't let WebDriver navigate a tab to an extension page, so the test opens it from Firefox's privileged context, which needs geckodriver's `--allow-system-access`.
   - A pref pins the add-on's internal UUID, so its page has a known address.
@@ -113,7 +116,6 @@ These were settled while designing it. Revisit them only with a reason.
 
 ## Not done yet
 
-- Searching [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) for an icon, which matters most for self-hosted apps.
 - Syncing the list between computers (Firefox Sync's add-on storage is too small for icons, so it would sync the list and re-fetch icons).
 - An admin-set list through Firefox's policy file (managed storage), for kiosk and family machines.
 - The first release on addons.mozilla.org. Everything is ready (see [Releasing](#releasing)) except the AMO account, its API secrets in GitHub, and running `just release 0.1.0`.
