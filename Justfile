@@ -60,7 +60,27 @@ release version $notes:
 # The listing text comes from release/amo-metadata.json and is sent with
 # every version. Needs WEB_EXT_API_KEY and WEB_EXT_API_SECRET.
 [doc("Submit to addons.mozilla.org for review (CI does this for each v* tag)")]
-amo-submit $notes="":
+amo-submit $notes="": amo-check
     mkdir -p dist
     node -e 'const m = require("./release/amo-metadata.json"); if (process.env.notes) m.version.release_notes = { "en-US": process.env.notes }; console.log(JSON.stringify(m, null, 2))' > dist/amo-metadata.json
     npx web-ext sign -s extension -a dist --channel listed --approval-timeout 0 --amo-metadata dist/amo-metadata.json
+
+# Asks AMO whose they are; submits nothing and prints no secrets.
+[doc("Check the AMO API keys in WEB_EXT_API_KEY and WEB_EXT_API_SECRET")]
+amo-check:
+    node scripts/amo-credentials.js
+
+# Asks for the key and secret (from https://addons.mozilla.org/developers/addon/api/key/),
+# removes stray whitespace, checks them with AMO, and only then sets them as
+# the AMO_API_KEY and AMO_API_SECRET secrets that the release workflow uses.
+[doc("Check AMO API keys, then save them as this repo's GitHub secrets")]
+amo-secrets:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    read -rp "JWT issuer: " key
+    read -rsp "JWT secret: " secret; echo
+    export WEB_EXT_API_KEY="$(printf %s "$key" | tr -d '[:space:]')"
+    export WEB_EXT_API_SECRET="$(printf %s "$secret" | tr -d '[:space:]')"
+    node scripts/amo-credentials.js
+    printf %s "$WEB_EXT_API_KEY" | gh secret set AMO_API_KEY
+    printf %s "$WEB_EXT_API_SECRET" | gh secret set AMO_API_SECRET

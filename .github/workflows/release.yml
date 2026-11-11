@@ -4,7 +4,8 @@
 # build. Mozilla signs it and publishes it on AMO once it's reviewed.
 #
 # Needs the repository secrets AMO_API_KEY and AMO_API_SECRET (the JWT issuer
-# and secret from https://addons.mozilla.org/developers/addon/api/key/).
+# and secret from https://addons.mozilla.org/developers/addon/api/key/);
+# `just amo-secrets` checks and sets them.
 name: release
 
 on:
@@ -26,6 +27,12 @@ jobs:
           node-version: 24
           cache: npm
       - uses: extractions/setup-just@v4
+      # Fails in seconds if the AMO keys are missing or wrong, not after the tests.
+      - name: Check the AMO credentials
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
+        run: just amo-check
       # The runner image keeps geckodriver here.
       - run: echo "$GECKOWEBDRIVER" >> "$GITHUB_PATH"
       - run: just setup

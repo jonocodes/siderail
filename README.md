@@ -94,7 +94,7 @@ Siderail is published as a listed add-on on addons.mozilla.org (AMO), which sign
 3. Mozilla reviews it, usually within a few days, then signs and publishes it.
 
 - **The listing text** (summary, description, category, licence, links) is in `release/amo-metadata.json` and is sent with every version, so change it there, not on the AMO website. A unit test checks it against AMO's rules.
-- **Credentials:** the workflow needs the repository secrets `AMO_API_KEY` and `AMO_API_SECRET`, the JWT issuer and secret from [AMO's API keys page](https://addons.mozilla.org/developers/addon/api/key/). To submit from your own machine, set `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET` and run `just amo-submit "notes"`.
+- **Credentials:** the workflow needs the repository secrets `AMO_API_KEY` and `AMO_API_SECRET`, the JWT issuer and secret from [AMO's API keys page](https://addons.mozilla.org/developers/addon/api/key/). The keys belong to your AMO account, so one pair works for all your add-ons; AMO keeps only one pair active, so regenerating it breaks the old one everywhere. `just amo-secrets` asks for them, checks them with AMO and sets both secrets, so nothing is mistyped or carries pasted whitespace. `just amo-check` checks the keys in `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET` (`scripts/amo-credentials.js`, which submits nothing), and the workflow runs it first so a bad key fails in seconds. To submit from your own machine, set those two and run `just amo-submit "notes"`.
 - **Versions** are plain `major.minor.patch`. AMO refuses a version number it has seen before, even from a failed submission, so a retry needs a new number.
 
 ## Design decisions
