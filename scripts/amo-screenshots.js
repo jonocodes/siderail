@@ -19,17 +19,27 @@ if (problems.length) {
 }
 
 // One API call, with a fresh token each time (AMO refuses a reused one).
+// AMO throttles bursts of edits ("Expected available in 56 seconds"), so a
+// throttled call waits as long as AMO asks and tries again.
 async function api(path, { method = "GET", form, json } = {}) {
-  const headers = { Authorization: `JWT ${token(key, secret)}` };
-  let body = form;
-  if (json) {
-    headers["content-type"] = "application/json";
-    body = JSON.stringify(json);
+  for (let attempt = 1; ; attempt++) {
+    const headers = { Authorization: `JWT ${token(key, secret)}` };
+    let body = form;
+    if (json) {
+      headers["content-type"] = "application/json";
+      body = JSON.stringify(json);
+    }
+    const res = await fetch(ADDON + path, { method, headers, body });
+    const data = res.status === 204 ? null : await res.json().catch(() => null);
+    if (res.status === 429 && attempt < 10) {
+      const seconds = Number(res.headers.get("retry-after")) || Number(data?.detail?.match(/(\d+) seconds?/)?.[1]) || 60;
+      console.log(`AMO asked to wait ${seconds}s before ${method} ${path || "the add-on"}...`);
+      await new Promise((resolve) => setTimeout(resolve, (seconds + 1) * 1000));
+      continue;
+    }
+    if (!res.ok) throw new Error(`${method} ${ADDON + path}: ${res.status} ${JSON.stringify(data)}`);
+    return data;
   }
-  const res = await fetch(ADDON + path, { method, headers, body });
-  const data = res.status === 204 ? null : await res.json().catch(() => null);
-  if (!res.ok) throw new Error(`${method} ${ADDON + path}: ${res.status} ${JSON.stringify(data)}`);
-  return data;
 }
 
 const old = (await api("")).previews ?? [];
