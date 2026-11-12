@@ -19,8 +19,9 @@ if (problems.length) {
 }
 
 // One API call, with a fresh token each time (AMO refuses a reused one).
-// AMO throttles bursts of edits ("Expected available in 56 seconds"), so a
-// throttled call waits as long as AMO asks and tries again.
+// AMO allows each account 3 edits a minute, 10 an hour and 24 a day
+// (uploads, captions and deletions all count, as do release submissions), so
+// a throttled call waits as long as AMO asks, up to an hour, and tries again.
 async function api(path, { method = "GET", form, json } = {}) {
   for (let attempt = 1; ; attempt++) {
     const headers = { Authorization: `JWT ${token(key, secret)}` };
