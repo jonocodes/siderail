@@ -78,11 +78,12 @@ GitHub Actions runs `just check` on every pull request and push to `main` (`.git
 
 ### Screenshots
 
-`just screenshots` regenerates `docs/screenshot-*.png` from `docs/screenshots.json`, so change that file rather than editing the images. `just screenshots editor` redoes only the shots whose file name contains "editor".
+`just screenshots` regenerates the README's `docs/screenshot-*.png` and the addons.mozilla.org listing's `release/screenshots/*.png` from `docs/screenshots.json`, so change that file rather than editing the images. `just screenshots editor` redoes only the shots whose file name contains "editor"; `just screenshots amo` only the listing's.
 
 - **What's in them:** the scene file has named site lists (`tv`, `family`) and the shots: which list, the size and theme, the page open in the current tab (its button is highlighted) and, for the editor, the site being added.
 - **Icons** come from [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) by name (`"plex"`), or any URL (NY Times is from [selfh.st/icons](https://github.com/selfhst/icons)), pinned to a commit so the images only change when the scene does. Generating them needs internet access for the icons only.
 - **How:** `scripts/screenshots.js` reuses the e2e setup (`test/e2e/browser.js`) and sends all of Firefox's traffic through a local proxy that serves a stand-in page for each site, so no real site is visited. Each stand-in's manifest offers the scene's icon, and every site is added through the real **+ Add this site** editor, so icon sizing and the light background are decided by the add-on itself. HSTS preloading and https upgrades are turned off for this.
+- **The listing's shots** (the scene's `amo` section) are 1280×800, the size AMO shows. Each puts the sidebar's own shot in a sketch of a Firefox window: a toolbar with the page's address, the sidebar, and the page drawn as that site's icon and name. Their captions are in the scene file too. `just amo-screenshots`, or running the `amo-screenshots` workflow on GitHub (which uses the repository's secrets), uploads them to the listing in the scene's order and removes the old ones.
 - Output is byte-identical between runs on the same machine; fonts come from the system, so another machine may differ slightly.
 
 ### Releasing
@@ -95,6 +96,7 @@ Siderail is published as a listed add-on on addons.mozilla.org (AMO), which sign
 
 - **The listing text** (summary, description, category, licence, links) is in `release/amo-metadata.json` and is sent with every version, so change it there, not on the AMO website. A unit test checks it against AMO's rules.
 - **Credentials:** the workflow needs the repository secrets `AMO_API_KEY` and `AMO_API_SECRET`, the JWT issuer and secret from [AMO's API keys page](https://addons.mozilla.org/developers/addon/api/key/). The keys belong to your AMO account, so one pair works for all your add-ons; AMO keeps only one pair active, so regenerating it breaks the old one everywhere. `just amo-secrets` asks for them, checks them with AMO and sets both secrets, so nothing is mistyped or carries pasted whitespace. `just amo-check` checks the keys in `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET` (`scripts/amo-credentials.js`, which submits nothing), and the workflow runs it first so a bad key fails in seconds. To submit from your own machine, set those two and run `just amo-submit "notes"`.
+- **Listing screenshots** aren't part of a release: AMO keeps them separately. After regenerating them, upload them with the `amo-screenshots` workflow (see [Screenshots](#screenshots)).
 - **Versions** are plain `major.minor.patch`. AMO refuses a version number it has seen before, even from a failed submission, so a retry needs a new number.
 
 ## Design decisions

@@ -47,5 +47,38 @@
         "svgIcon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons@59f1e9a4108f4f510f41e9588f078631de1e1405/svg/plex.svg"
       }
     }
-  ]
+  ],
+  "amo": {
+    "width": 1280,
+    "height": 800,
+    "sidebar": 320,
+    "shots": [
+      {
+        "file": "1-tv.png",
+        "sites": "tv",
+        "page": "https://www.netflix.com/browse",
+        "caption": "Your sites as buttons in the sidebar. Click one to load it in the current tab; the site that's open is highlighted."
+      },
+      {
+        "file": "2-family.png",
+        "sites": "family",
+        "theme": "light",
+        "page": "https://mail.google.com/mail/u/0/",
+        "caption": "A few everyday sites get big buttons with the icon above the name. Light and dark follow Firefox's theme."
+      },
+      {
+        "file": "3-editor.png",
+        "sites": "tv",
+        "page": "https://app.plex.tv/desktop",
+        "add": {
+          "name": "Plex",
+          "address": "https://app.plex.tv/",
+          "manifestIcon": "plex",
+          "touchIcon": "plex-light",
+          "svgIcon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons@59f1e9a4108f4f510f41e9588f078631de1e1405/svg/plex.svg"
+        },
+        "caption": "Adding a site: Siderail suggests its name and address and offers the large icons it finds, a letter, or your own upload."
+      }
+    ]
+  }
 }

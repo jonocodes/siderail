@@ -36,7 +36,7 @@ check: lint test e2e
 
 # Needs internet for the icons. `just screenshots editor` redoes only the
 # shots whose file name contains "editor".
-[doc("Regenerate the README screenshots from docs/screenshots.json")]
+[doc("Regenerate the README and AMO screenshots from docs/screenshots.json")]
 screenshots *shot: build
     node scripts/screenshots.js {{shot}}
 
@@ -84,3 +84,9 @@ amo-secrets:
     node scripts/amo-credentials.js
     printf %s "$WEB_EXT_API_KEY" | gh secret set AMO_API_KEY
     printf %s "$WEB_EXT_API_SECRET" | gh secret set AMO_API_SECRET
+
+# Uses WEB_EXT_API_KEY and WEB_EXT_API_SECRET; the amo-screenshots workflow
+# runs this with the repository's secrets instead.
+[doc("Replace the AMO listing's screenshots with release/screenshots/")]
+amo-screenshots: amo-check
+    node scripts/amo-screenshots.js

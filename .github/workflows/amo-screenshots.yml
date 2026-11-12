@@ -1,0 +1,23 @@
+# Run by hand (Actions tab, or `gh workflow run amo-screenshots`) to replace
+# the addons.mozilla.org listing's screenshots with release/screenshots/,
+# using the repository's AMO_API_KEY and AMO_API_SECRET secrets.
+# Regenerate them first with `just screenshots amo` and commit them.
+name: amo-screenshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: extractions/setup-just@v4
+      - name: Replace the listing's screenshots
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
+        run: just amo-screenshots
