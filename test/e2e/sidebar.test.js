@@ -288,7 +288,7 @@ test("a self-hosted app without a large icon gets its icon from dashboard-icons"
   assert.equal(await pressedTitle(), "jellyfin from dashboard-icons");
   assert.match(await (await $(".editor .hint")).getText(), /No large icon found on this site, so this one is jellyfin from dashboard-icons/);
   await (await $('button[type="submit"]')).click();
-  await driver.wait(async () => (await tileNames()).length === 2, 5000);
+  await driver.wait(async () => (await tileNames()).length === 2, WAIT);
   assert.match(await svgOf(jellyfin), /class="jellyfin"/);
 });
 
@@ -312,17 +312,17 @@ test("searches dashboard-icons from the editor, without permission to read sites
   await (await button("Search…")).click();
   const search = await $('input[name="icon-search"]');
   assert.equal(await search.getAttribute("value"), "Jellyfin");
-  await driver.wait(async () => (await resultTitles())?.[0] === "jellyfin", 5000);
+  await driver.wait(async () => (await resultTitles())?.[0] === "jellyfin", WAIT);
 
   // Light and dark variants are offered; the arrow keys move between results.
   await search.clear();
   await search.sendKeys("PLEX");
-  await driver.wait(async () => (await resultTitles())?.join() === "plex,plex-light", 5000);
+  await driver.wait(async () => (await resultTitles())?.join() === "plex,plex-light", WAIT);
   await search.sendKeys(Key.ARROW_DOWN);
   await driver.switchTo().activeElement().sendKeys(Key.ARROW_RIGHT);
   assert.equal(await driver.switchTo().activeElement().getAttribute("title"), "plex-light");
   await driver.switchTo().activeElement().sendKeys(Key.ENTER);
-  await driver.wait(async () => (await pressedTitle()) === "plex-light from dashboard-icons", 5000);
+  await driver.wait(async () => (await pressedTitle()) === "plex-light from dashboard-icons", WAIT);
   assert.equal(await (await $(".search")).isDisplayed(), false);
 
   // Aliases count. Enter in the search box picks the first result rather
@@ -330,18 +330,18 @@ test("searches dashboard-icons from the editor, without permission to read sites
   await (await button("Search…")).click();
   await search.clear();
   await search.sendKeys("usenet");
-  await driver.wait(async () => (await resultTitles())?.join() === "nzb-get", 5000);
+  await driver.wait(async () => (await resultTitles())?.join() === "nzb-get", WAIT);
   await search.sendKeys(Key.ENTER);
-  await driver.wait(async () => (await pressedSize()) === "128", 5000);
+  await driver.wait(async () => (await pressedSize()) === "128", WAIT);
   await $(".editor");
 
   // Listed as SVG, but there's only a PNG: that's used instead.
   await (await button("Search…")).click();
   await search.clear();
   await search.sendKeys("kodi");
-  await driver.wait(async () => (await resultTitles())?.join() === "kodi", 5000);
+  await driver.wait(async () => (await resultTitles())?.join() === "kodi", WAIT);
   await (await $('.results button[title="kodi"]')).click();
-  await driver.wait(async () => (await pressedSize()) === "96", 5000);
+  await driver.wait(async () => (await pressedSize()) === "96", WAIT);
 
   // Escape closes the search, not the editor.
   await (await button("Search…")).click();
@@ -360,7 +360,7 @@ test("says so when dashboard-icons can't be reached", async () => {
   await $(".tiles");
   await menu(`${sites.bravo}jellyfin/`, "Edit");
   await (await button("Search…")).click();
-  await driver.wait(async () => /Couldn't reach dashboard-icons/.test(await (await $(".editor .hint")).getText()), 5000);
+  await driver.wait(async () => /Couldn't reach dashboard-icons/.test(await (await $(".editor .hint")).getText()), WAIT);
   // The rest of the editor still works.
   await (await button("Cancel")).click();
   await $(".tiles");
