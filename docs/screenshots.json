@@ -22,12 +22,6 @@
   },
   "shots": [
     {
-      "file": "screenshot-sidebar.png",
-      "sites": "tv",
-      "height": 624,
-      "page": "https://www.netflix.com/browse"
-    },
-    {
       "file": "screenshot-family.png",
       "sites": "family",
       "theme": "light",

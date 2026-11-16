@@ -10,9 +10,9 @@ Install it from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/si
 
 It started as a launcher for a living-room PC, but nothing in it is TV-specific: it works just as well as a simple console for someone who only needs a few sites.
 
+<img src="release/screenshots/1-tv.png" alt="Firefox with the Siderail sidebar listing seven streaming and self-hosted services; Netflix is highlighted because it's open in the tab">
+
 <p>
-  <img src="docs/screenshot-sidebar.png" alt="The sidebar with seven streaming and self-hosted services as large buttons, Netflix highlighted" width="180">
-  &nbsp;
   <img src="docs/screenshot-family.png" alt="The sidebar in light mode with Gmail, Docs, NY Times, Wikipedia and Photos, Gmail highlighted" width="180">
   &nbsp;
   <img src="docs/screenshot-editor.png" alt="Adding Plex: name, address, and a choice of the icons found on the site, a letter tile or an upload" width="180">
@@ -85,7 +85,7 @@ GitHub Actions runs `just check` on every pull request and push to `main` (`.git
 
 - **What's in them:** the scene file has named site lists (`tv`, `family`) and the shots: which list, the size and theme, the page open in the current tab (its button is highlighted) and, for the editor, the site being added.
 - **Icons** come from [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) by name (`"plex"`), or any URL (NY Times is from [selfh.st/icons](https://github.com/selfhst/icons)), pinned to a commit so the images only change when the scene does. Generating them needs internet access for the icons only.
-- **How:** `scripts/screenshots.js` reuses the e2e setup (`test/e2e/browser.js`) and sends all of Firefox's traffic through a local proxy that serves a stand-in page for each site, so no real site is visited. Each stand-in's manifest offers the scene's icon, and every site is added through the real **+ Add this site** editor, so icon sizing and the light background are decided by the add-on itself. HSTS preloading and https upgrades are turned off for this.
+- **How:** `scripts/screenshots.js` reuses the e2e setup (`test/e2e/browser.js`) and sends all of Firefox's traffic through a local proxy that serves a stand-in page for each site, so no real site is visited. The one exception is dashboard-icons at the scene's pinned commit, which the editor's icon search reads. Each stand-in's manifest offers the scene's icon, and every site is added through the real **+ Add this site** editor, so icon sizing and the light background are decided by the add-on itself. HSTS preloading and https upgrades are turned off for this.
 - **The listing's shots** (the scene's `amo` section) are 1280×800, the size AMO shows. Each puts the sidebar's own shot in a sketch of a Firefox window: a toolbar with the page's address, the sidebar, and the page drawn as that site's icon and name. Their captions are in the scene file too. `just amo-screenshots`, or running the `amo-screenshots` workflow on GitHub (which uses the repository's secrets), uploads them to the listing in the scene's order and removes the old ones. AMO allows 10 edits an hour and 24 a day per account, counting each upload, caption, deletion and release submission; three screenshots take about eight, so an upload can pause for up to an hour, waiting as AMO asks.
 - Output is byte-identical between runs on the same machine; fonts come from the system, so another machine may differ slightly.
 

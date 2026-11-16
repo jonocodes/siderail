@@ -39,6 +39,11 @@ const shots = [
 ].filter((s) => !only || s.label.includes(only));
 if (!shots.length) throw new Error(`No shot matches "${only}"`);
 
+// The editor's dashboard-icons search reads this copy: the scene's pinned
+// commit, over http so it comes through the proxy below like everything else.
+const DASHBOARD_ICONS = new URL("../", scene.icons);
+const dashboardViaProxy = DASHBOARD_ICONS.href.replace(/^https:/, "http:");
+
 // "plex" is a dashboard-icons name; anything with a scheme is used as is.
 const iconUrl = (ref) => (/^https?:/.test(ref) ? ref : `${scene.icons}${ref}.png`);
 const downloads = new Map();
@@ -62,6 +67,11 @@ async function respond(req, res) {
   const url = new URL(req.url);
   if (process.env.DEBUG) console.log("proxy", url.href);
   const send = (type, body, status = 200) => res.writeHead(status, { "content-type": type }).end(body);
+  // The pinned dashboard-icons, fetched for real: the only traffic let through.
+  if (url.host === DASHBOARD_ICONS.host && url.pathname.startsWith(DASHBOARD_ICONS.pathname)) {
+    const { type, body } = await download(`https://${url.host}${url.pathname}`);
+    return res.writeHead(200, { "content-type": type, "access-control-allow-origin": "*" }).end(body);
+  }
   const site = standIns.get(url.host);
   if (site) {
     const { name, icons } = site;
@@ -214,7 +224,8 @@ try {
 
     await setTheme(shot.theme ?? scene.theme);
     await driver.executeAsyncScript(
-      "const done = arguments[arguments.length - 1]; browser.storage.local.clear().then(() => done());",
+      "const done = arguments[arguments.length - 1]; browser.storage.local.clear().then(() => browser.storage.local.set({ dashboardIconsBase: arguments[0] })).then(() => done());",
+      dashboardViaProxy,
     );
     await driver.navigate().refresh();
     // The page fills the viewport; pin it to the shot's size instead of
