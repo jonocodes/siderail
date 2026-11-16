@@ -82,7 +82,7 @@ footer.hidden { display: none; }
 .editor h2 { margin: 0; font-size: 15px; }
 .editor .preview { height: 120px; }
 .editor label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 13px; }
-.editor input[type="text"], .editor input[type="url"] {
+.editor input[type="text"], .editor input[type="url"], .editor input[type="search"] {
   font: inherit;
   color: var(--text);
   background: var(--field);
@@ -97,6 +97,11 @@ footer.hidden { display: none; }
 .choice { --s: 40px; aspect-ratio: 1; padding: 6px; display: grid; place-items: center; }
 .choice[aria-pressed="true"] { background: var(--active); box-shadow: inset 0 0 0 2px var(--accent); }
 .choice .label { font-size: 12px; color: var(--muted); }
+/* Searching dashboard-icons, under the choices. */
+.search { display: flex; flex-direction: column; gap: 6px; margin-top: -6px; }
+.search[hidden] { display: none; }
+.results { max-height: 240px; overflow: auto; }
+.results:empty { display: none; }
 .actions { display: flex; gap: 6px; }
 .actions .primary { background: var(--accent); color: #fff; }
 .actions .danger { margin-left: auto; color: #e5383b; }
