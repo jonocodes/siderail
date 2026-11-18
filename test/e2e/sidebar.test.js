@@ -50,9 +50,15 @@ async function goTo(url) {
   await driver.switchTo().window(railTab);
 }
 
+// Right-clicks the list's background (or the empty sidebar) and picks "Add this site".
+async function addThisSite() {
+  await driver.actions().contextClick(await $("main")).perform();
+  await (await $(".menu")).findElement(By.xpath('./button[.="Add this site"]')).click();
+}
+
 // Opens the editor for the site in the other tab and waits for icon discovery.
 async function addCurrentSite() {
-  await (await $("#add")).click();
+  await addThisSite();
   await $(".editor");
   await driver.wait(async () => (await (await $(".editor .hint")).getText()) !== "Looking for icons…", 2 * WAIT);
 }
@@ -81,13 +87,16 @@ async function hasSiteAccess() {
   return driver.executeAsyncScript("browser.permissions.contains({ origins: ['<all_urls>'] }).then(arguments[0]);");
 }
 
-test("starts empty", async () => {
-  assert.match(await (await $(".empty")).getText(), /No sites yet/);
+test("starts empty, offering to add a site or import a backup", async () => {
+  const empty = await $(".empty");
+  assert.match(await empty.getText(), /No sites yet/);
+  const links = await Promise.all((await empty.findElements(By.css("button"))).map((b) => b.getText()));
+  assert.deepEqual(links, ["Add this site", "Import a backup"]);
 });
 
 test("on a page that isn't a website, adding says so without asking for access", async () => {
   await goTo("about:blank");
-  await (await $("#add")).click();
+  await addThisSite();
   await driver.wait(async () => (await (await $("#status")).getText()).includes("Open a website first"), WAIT);
   // The test profile grants permission requests silently, so a request would show here.
   assert.equal(await hasSiteAccess(), false);
@@ -118,6 +127,17 @@ test("falls back to a letter when a site has only a small favicon", async () => 
   await driver.wait(async () => (await tileNames()).length === 2, WAIT);
   assert.deepEqual(await tileNames(), ["Alpha", "Bravo"]);
   assert.equal(await activeName(), "Bravo");
+});
+
+test("adding a site is only offered from the right-click menu", async () => {
+  const visible = await driver.findElements(By.xpath('//button[contains(., "Add")]'));
+  assert.deepEqual(visible, []);
+  await driver.actions().contextClick(await $(".tile.active")).perform();
+  const labels = await Promise.all((await (await $(".menu")).findElements(By.css("button"))).map((b) => b.getText()));
+  assert.equal(labels.at(0), "Edit");
+  assert.equal(labels.at(-1), "Add this site");
+  await driver.actions().sendKeys(Key.ESCAPE).perform();
+  await driver.wait(async () => (await driver.findElements(By.css(".menu"))).length === 0, WAIT);
 });
 
 test("clicking a button loads the site in the other tab", async () => {
@@ -252,7 +272,7 @@ test("exports the list, icons included, and imports it back", async () => {
   await menu(`${sites.bravo}deep/page`, "Remove");
   await $(".empty");
   const before = await driver.getAllWindowHandles();
-  await (await $(".empty button.link")).click();
+  await (await $(".empty")).findElement(By.xpath('.//button[.="Import a backup"]')).click();
   await driver.wait(async () => (await driver.getAllWindowHandles()).length > before.length, WAIT);
   const importTab = (await driver.getAllWindowHandles()).find((h) => !before.includes(h));
   await driver.switchTo().window(importTab);

@@ -2,11 +2,8 @@ html, body { height: 100%; }
 body { display: flex; flex-direction: column; }
 main { flex: 1; min-height: 0; overflow: auto; }
 footer { flex: none; padding: 8px; border-top: 1px solid var(--line); }
-footer.hidden { display: none; }
-#status { margin: 0 0 6px; color: var(--muted); font-size: 13px; }
-#status:empty { display: none; }
-
-#add { width: 100%; }
+footer.hidden, footer:has(#status:empty) { display: none; }
+#status { margin: 0; color: var(--muted); font-size: 13px; }
 
 /* Buttons share the height evenly up to a cap, so a few sites get big
    buttons and many sites get compact rows. */
@@ -76,6 +73,7 @@ footer.hidden { display: none; }
 .menu button { display: block; width: 100%; text-align: left; background: none; }
 .menu button:hover:not(:disabled) { background: var(--tile-hover); }
 .menu button:disabled { color: var(--muted); cursor: default; }
+.menu hr { margin: 4px 0; border: none; border-top: 1px solid var(--line); }
 
 /* Editor */
 .editor { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
