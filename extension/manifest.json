@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Siderail",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Your sites as big buttons in the sidebar. Click one to open it in the current tab.",
   "browser_specific_settings": {
     "gecko": {
