@@ -148,7 +148,8 @@ async function goTo(url) {
 // click: Firefox only grants the add-on access to sites from user input.
 async function openAdd(url, address) {
   await goTo(url);
-  await (await $("#add")).click();
+  await driver.actions().contextClick(await $("main")).perform();
+  await (await $(".menu")).findElement(By.xpath('./button[.="Add this site"]')).click();
   await driver.wait(async () => (await (await $(".editor .hint")).getText()) !== "Looking for icons…", 10000);
   // The editor saw the stand-in's http:// address; put the real one back, as
   // if typed. Focus stays in Name, as when the editor opens.

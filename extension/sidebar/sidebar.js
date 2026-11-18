@@ -32,7 +32,6 @@ const MAX_RESULTS = 24;
 const main = document.getElementById("main");
 const footer = document.getElementById("footer");
 const statusLine = document.getElementById("status");
-const addButton = document.getElementById("add");
 
 let sites = [];
 // The current tab's address and the saved site it belongs to.
@@ -127,7 +126,8 @@ function renderList() {
         "div",
         { class: "empty" },
         h("p", {}, "No sites yet."),
-        h("p", {}, "Open a website, then press “Add this site”."),
+        h("p", {}, "Open a website, then right-click here and choose “Add this site”."),
+        h("p", {}, h("button", { type: "button", class: "link", onclick: addThisSite }, "Add this site")),
         h("p", {}, h("button", { type: "button", class: "link", onclick: () => browser.runtime.openOptionsPage() }, "Import a backup")),
       ),
     );
@@ -153,7 +153,6 @@ function tile(site) {
         e.preventDefault();
         openSite(site, true);
       },
-      oncontextmenu: (e) => showMenu(e, site),
     },
     h("span", { class: "in" }, iconFor(site), h("span", { class: "name" }, site.name)),
   );
@@ -168,21 +167,35 @@ function iconFor({ name, icon, plate }) {
 
 // ---- Right-click menu
 
+// Right-clicking a button offers that site's actions and adding a site;
+// anywhere else in the list offers adding a site. Adding lives only here, not
+// on a visible button, so the sidebar is just the sites for whoever uses it.
+document.addEventListener("contextmenu", (e) => {
+  // The editor keeps the browser's own menu, for its text fields.
+  if (draft) return;
+  const id = e.target.closest?.(".tile")?.dataset.id;
+  showMenu(e, sites.find((s) => s.id === id));
+});
+
 function showMenu(e, site) {
   e.preventDefault();
   closeMenu();
-  const i = sites.findIndex((s) => s.id === site.id);
+  const i = site ? sites.findIndex((s) => s.id === site.id) : -1;
   const item = (label, action, disabled = false) =>
     h("button", { type: "button", role: "menuitem", disabled, onclick: () => (closeMenu(), action()) }, label);
   menu = h(
     "div",
     { class: "menu", role: "menu" },
-    item("Edit", () => openEditor(site)),
-    item("Move to top", () => save(moveTo(sites, site.id, 0)), i === 0),
-    item("Move up", () => save(move(sites, site.id, -1)), i === 0),
-    item("Move down", () => save(move(sites, site.id, 1)), i === sites.length - 1),
-    item("Move to bottom", () => save(moveTo(sites, site.id, sites.length - 1)), i === sites.length - 1),
-    item("Remove", () => removeSite(site)),
+    site && [
+      item("Edit", () => openEditor(site)),
+      item("Move to top", () => save(moveTo(sites, site.id, 0)), i === 0),
+      item("Move up", () => save(move(sites, site.id, -1)), i === 0),
+      item("Move down", () => save(move(sites, site.id, 1)), i === sites.length - 1),
+      item("Move to bottom", () => save(moveTo(sites, site.id, sites.length - 1)), i === sites.length - 1),
+      item("Remove", () => removeSite(site)),
+      h("hr", { role: "separator" }),
+    ],
+    item("Add this site", addThisSite),
   );
   document.body.append(menu);
   const box = menu.getBoundingClientRect();
@@ -221,12 +234,13 @@ async function removeSite(site) {
 // requested straight from the click: Firefox only prompts for user actions.
 const requestSiteAccess = () => browser.permissions.request({ origins: ["<all_urls>"] });
 
-addButton.addEventListener("click", () => {
+// Called straight from a click, for requestSiteAccess.
+function addThisSite() {
   // Checked before asking, so a new tab doesn't get a permission prompt
   // followed by "open a website first". startAdd checks again.
   if (!isWeb(activeUrl)) return setStatus("Open a website first, then add it.");
   startAdd(requestSiteAccess());
-});
+}
 
 const isWeb = (url) => /^https?:/.test(url ?? "");
 
